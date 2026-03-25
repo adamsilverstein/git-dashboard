@@ -32,7 +32,7 @@ export function PRRow({ item, selected, unseen, onPreview, onOpen }: PRRowProps)
   return (
     <tr
       ref={ref}
-      className={`pr-row ${selected ? 'pr-row-selected' : ''} ${unseen ? 'pr-row-unseen' : ''}`}
+      className={`pr-row ${selected ? 'pr-row-selected' : ''}`}
       onClick={handleClick}
     >
       <td className="col-type">

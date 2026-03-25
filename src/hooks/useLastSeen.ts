@@ -9,17 +9,27 @@ function prKey(pr: PRItem): string {
 }
 
 function loadLastSeen(): Record<string, string> {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return {};
   try {
-    return JSON.parse(raw);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === 'string') result[key] = value;
+    }
+    return result;
   } catch {
     return {};
   }
 }
 
 function saveLastSeen(data: Record<string, string>): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // Silently ignore storage failures (e.g. quota exceeded, private browsing)
+  }
 }
 
 /**
@@ -31,7 +41,9 @@ export function hasNewActivity(
 ): boolean {
   const seen = lastSeenMap[prKey(pr)];
   if (!seen) return true; // never seen → new
-  return new Date(pr.updatedAt).getTime() > new Date(seen).getTime();
+  const seenDate = new Date(seen);
+  if (isNaN(seenDate.getTime())) return true; // invalid timestamp → treat as unseen
+  return new Date(pr.updatedAt).getTime() > seenDate.getTime();
 }
 
 /**
