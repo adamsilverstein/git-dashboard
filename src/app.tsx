@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import type { ViewMode, FilterMode, SortMode, SortDirection, ItemTypeFilter, PRItem } from './types.js';
+import type { ViewMode, FilterMode, SortMode, SortDirection, ItemTypeFilter, PRItem, PRStateFilterKey } from './types.js';
 import { createClient } from './github/client.js';
 import { getToken, setToken as saveToken, clearToken } from './config.js';
 import { useConfig } from './hooks/useConfig.js';
@@ -36,6 +36,9 @@ export function App() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [itemTypeFilter, setItemTypeFilter] = useState<ItemTypeFilter>('both');
   const [previewItem, setPreviewItem] = useState<PRItem | null>(null);
+  const [prStateFilters, setPRStateFilters] = useState<Set<PRStateFilterKey>>(
+    () => new Set<PRStateFilterKey>(['draft', 'open'])
+  );
 
   const { markSeen, isUnseen } = useLastSeen();
 
@@ -88,6 +91,19 @@ export function App() {
     setCursorIndex(0);
   }, []);
 
+  const togglePRStateFilter = useCallback((key: PRStateFilterKey) => {
+    setPRStateFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+    setCursorIndex(0);
+  }, []);
+
   // Filter and sort
   const filtered = useMemo(() => {
     let result = [...items];
@@ -97,6 +113,20 @@ export function App() {
       result = result.filter((item) => item.kind === 'pr');
     } else if (itemTypeFilter === 'issues') {
       result = result.filter((item) => item.kind === 'issue');
+    }
+
+    // PR state filter (draft / open / merged toggles)
+    if (prStateFilters.size > 0) {
+      result = result.filter((pr) => {
+        if (pr.kind !== 'pr') return true; // don't filter out issues
+        if (pr.draft && prStateFilters.has('draft')) return true;
+        if (!pr.draft && pr.state === 'open' && prStateFilters.has('open')) return true;
+        if (pr.state === 'merged' && prStateFilters.has('merged')) return true;
+        return false;
+      });
+    } else {
+      // If no state filters are active, show nothing (all toggled off)
+      result = result.filter((pr) => pr.kind !== 'pr');
     }
 
     if (filter === 'failing') {
@@ -176,7 +206,7 @@ export function App() {
     });
 
     return result;
-  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, isUnseen]);
+  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, prStateFilters, isUnseen]);
 
   // Clamp cursor when filtered list shrinks
   useEffect(() => {
@@ -328,6 +358,8 @@ export function App() {
         onSetItemType={setItemTypeFilter}
         hiddenRepos={hiddenRepos}
         onRestoreRepo={toggleRepoByName}
+        prStateFilters={prStateFilters}
+        onTogglePRState={togglePRStateFilter}
       />
       <PRTable
         items={filtered}
