@@ -1,38 +1,45 @@
 import React from 'react';
-import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
 
 interface HeaderProps {
   loading: boolean;
   lastRefresh: Date | null;
   repoCount: number;
   itemCount: number;
+  onOpenRepos: () => void;
+  onSignOut: () => void;
 }
 
-export function Header({ loading, lastRefresh, repoCount, itemCount }: HeaderProps) {
+export function Header({
+  loading,
+  lastRefresh,
+  repoCount,
+  itemCount,
+  onOpenRepos,
+  onSignOut,
+}: HeaderProps) {
   return (
-    <Box flexDirection="row" justifyContent="space-between" paddingX={1}>
-      <Box>
-        <Text bold color="cyan">
-          Git Dashboard
-        </Text>
-        <Text color="gray">
-          {' '}
-          — {repoCount} repo{repoCount !== 1 ? 's' : ''}, {itemCount} PR
+    <header className="header">
+      <div className="header-left">
+        <h1 className="header-title">Git Dashboard</h1>
+        <span className="header-stats">
+          {repoCount} repo{repoCount !== 1 ? 's' : ''} &middot; {itemCount} PR
           {itemCount !== 1 ? 's' : ''}
-        </Text>
-      </Box>
-      <Box>
-        {loading ? (
-          <Text color="yellow">
-            <Spinner type="dots" /> Refreshing…
-          </Text>
-        ) : lastRefresh ? (
-          <Text color="gray">
-            Last refresh: {lastRefresh.toLocaleTimeString()}
-          </Text>
-        ) : null}
-      </Box>
-    </Box>
+        </span>
+      </div>
+      <div className="header-right">
+        {loading && <span className="spinner" />}
+        {lastRefresh && !loading && (
+          <span className="last-refresh">
+            {lastRefresh.toLocaleTimeString()}
+          </span>
+        )}
+        <button className="header-btn" onClick={onOpenRepos} title="Manage repos (c)">
+          Repos
+        </button>
+        <button className="header-btn header-btn-subtle" onClick={onSignOut} title="Sign out">
+          Sign out
+        </button>
+      </div>
+    </header>
   );
 }

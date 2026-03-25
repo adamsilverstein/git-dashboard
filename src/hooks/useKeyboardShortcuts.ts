@@ -1,4 +1,4 @@
-import { useInput } from 'ink';
+import { useEffect } from 'react';
 import type { ViewMode } from '../types.js';
 
 interface ShortcutActions {
@@ -9,61 +9,64 @@ interface ShortcutActions {
   cycleFilter: () => void;
   cycleSort: () => void;
   refresh: () => void;
-  exit: () => void;
 }
 
 export function useKeyboardShortcuts(actions: ShortcutActions) {
-  useInput((input, key) => {
-    const { viewMode, setViewMode } = actions;
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Skip when typing in inputs
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
 
-    // Help overlay: only ? and Escape close it
-    if (viewMode === 'help') {
-      if (input === '?' || key.escape) setViewMode('list');
-      return;
-    }
+      const { viewMode, setViewMode } = actions;
 
-    // Repo manager: Escape returns to list
-    if (viewMode === 'repos') {
-      if (key.escape) setViewMode('list');
-      return;
-    }
+      if (viewMode === 'help') {
+        if (e.key === '?' || e.key === 'Escape') setViewMode('list');
+        return;
+      }
 
-    // Main list shortcuts
-    if (input === '?') {
-      setViewMode('help');
-      return;
-    }
-    if (input === 'q') {
-      actions.exit();
-      return;
-    }
-    if (input === 'j' || key.downArrow) {
-      actions.moveCursor(1);
-      return;
-    }
-    if (input === 'k' || key.upArrow) {
-      actions.moveCursor(-1);
-      return;
-    }
-    if (key.return) {
-      actions.openSelected();
-      return;
-    }
-    if (input === 'f') {
-      actions.cycleFilter();
-      return;
-    }
-    if (input === 's') {
-      actions.cycleSort();
-      return;
-    }
-    if (input === 'r') {
-      actions.refresh();
-      return;
-    }
-    if (input === 'c') {
-      setViewMode('repos');
-      return;
-    }
-  });
+      if (viewMode === 'repos') {
+        if (e.key === 'Escape') setViewMode('list');
+        return;
+      }
+
+      switch (e.key) {
+        case '?':
+          setViewMode('help');
+          break;
+        case 'j':
+        case 'ArrowDown':
+          e.preventDefault();
+          actions.moveCursor(1);
+          break;
+        case 'k':
+        case 'ArrowUp':
+          e.preventDefault();
+          actions.moveCursor(-1);
+          break;
+        case 'Enter':
+          actions.openSelected();
+          break;
+        case 'f':
+          actions.cycleFilter();
+          break;
+        case 's':
+          actions.cycleSort();
+          break;
+        case 'r':
+          actions.refresh();
+          break;
+        case 'c':
+          setViewMode('repos');
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [actions]);
 }

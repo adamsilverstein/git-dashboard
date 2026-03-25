@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box, Text } from 'ink';
+import React, { useEffect, useRef } from 'react';
 import type { PRItem } from '../types.js';
-import { ciIcon, reviewIcons } from '../utils/statusIcons.js';
+import { CIBadge } from './CIBadge.js';
+import { ReviewBadge } from './ReviewBadge.js';
 import { timeAgo } from '../utils/timeAgo.js';
 
 interface PRRowProps {
@@ -10,27 +10,40 @@ interface PRRowProps {
 }
 
 export function PRRow({ item, selected }: PRRowProps) {
-  const repoLabel = `${item.repo.owner}/${item.repo.name}`;
-  const reviews = reviewIcons(item.reviewState);
-  const time = timeAgo(item.updatedAt);
+  const ref = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    if (selected && ref.current) {
+      ref.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [selected]);
+
+  const handleClick = () => {
+    window.open(item.url, '_blank');
+  };
 
   return (
-    <Box flexDirection="row" paddingX={1}>
-      <Text>{selected ? '▸ ' : '  '}</Text>
-      <Text>{ciIcon(item.ciStatus)} </Text>
-      <Text color="gray" dimColor>
-        [{repoLabel}]{' '}
-      </Text>
-      <Text color="magenta">#{item.number} </Text>
-      <Box flexGrow={1}>
-        <Text wrap="truncate">
-          {item.draft ? <Text color="gray">[draft] </Text> : null}
-          {item.title}
-        </Text>
-      </Box>
-      <Text color="gray"> @{item.author}</Text>
-      <Text color="gray"> {time}</Text>
-      {reviews ? <Text> {reviews}</Text> : null}
-    </Box>
+    <tr
+      ref={ref}
+      className={`pr-row ${selected ? 'pr-row-selected' : ''}`}
+      onClick={handleClick}
+    >
+      <td className="col-ci">
+        <CIBadge status={item.ciStatus} />
+      </td>
+      <td className="col-repo">
+        {item.repo.owner}/{item.repo.name}
+      </td>
+      <td className="col-number">#{item.number}</td>
+      <td className="col-title">
+        {item.draft && <span className="draft-badge">draft</span>}
+        {item.title}
+      </td>
+      <td className="col-author">@{item.author}</td>
+      <td className="col-updated">{timeAgo(item.updatedAt)}</td>
+      <td className="col-reviews">
+        <ReviewBadge state={item.reviewState} />
+      </td>
+    </tr>
   );
 }

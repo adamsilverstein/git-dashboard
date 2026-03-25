@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import type { Config } from './types.js';
+
+const STORAGE_KEY = 'gh-dashboard-config';
+const TOKEN_KEY = 'gh-dashboard-token';
 
 const DEFAULT_CONFIG: Config = {
   repos: [],
@@ -12,17 +12,10 @@ const DEFAULT_CONFIG: Config = {
   },
 };
 
-export function getConfigPath(customPath?: string): string {
-  return customPath ?? join(homedir(), '.git-dashboard.json');
-}
-
-export function loadConfig(customPath?: string): Config {
-  const path = getConfigPath(customPath);
-  if (!existsSync(path)) {
-    return { ...DEFAULT_CONFIG, repos: [] };
-  }
+export function loadConfig(): Config {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { ...DEFAULT_CONFIG, repos: [] };
   try {
-    const raw = readFileSync(path, 'utf-8');
     const parsed = JSON.parse(raw);
     return {
       repos: parsed.repos ?? [],
@@ -33,7 +26,18 @@ export function loadConfig(customPath?: string): Config {
   }
 }
 
-export function saveConfig(config: Config, customPath?: string): void {
-  const path = getConfigPath(customPath);
-  writeFileSync(path, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+export function saveConfig(config: Config): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
 }

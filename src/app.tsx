@@ -1,35 +1,33 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Box, useApp } from 'ink';
-import type { ViewMode, FilterMode, SortMode, PRItem } from './types.js';
-import type { Octokit } from '@octokit/rest';
+import type { ViewMode, FilterMode, SortMode } from './types.js';
+import { createClient } from './github/client.js';
+import { getToken, setToken as saveToken, clearToken } from './config.js';
 import { useConfig } from './hooks/useConfig.js';
 import { useGithubData } from './hooks/useGithubData.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { Header } from './components/Header.js';
-import { PRList } from './components/PRList.js';
-import { StatusBar } from './components/StatusBar.js';
-import { HelpOverlay } from './components/HelpOverlay.js';
 import { FilterBar } from './components/FilterBar.js';
+import { PRTable } from './components/PRTable.js';
+import { StatusBar } from './components/StatusBar.js';
+import { HelpModal } from './components/HelpModal.js';
 import { RepoManager } from './components/RepoManager.js';
-import { openUrl } from './utils/openUrl.js';
+import { TokenSetup } from './components/TokenSetup.js';
 
 const FILTER_CYCLE: FilterMode[] = ['all', 'failing', 'needs-review'];
 const SORT_CYCLE: SortMode[] = ['updated', 'created', 'repo', 'status'];
 
-interface AppProps {
-  octokit: Octokit;
-  configPath?: string;
-}
-
-export function App({ octokit, configPath }: AppProps) {
-  const { exit } = useApp();
-  const { config, enabledRepos, addRepo, removeRepo, toggleRepo } =
-    useConfig(configPath);
-
+export function App() {
+  const [token, setTokenState] = useState<string | null>(() => getToken());
+  const { config, enabledRepos, addRepo, removeRepo, toggleRepo } = useConfig();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [cursorIndex, setCursorIndex] = useState(0);
   const [filter, setFilter] = useState<FilterMode>(config.defaults.filter);
   const [sort, setSort] = useState<SortMode>(config.defaults.sort);
+
+  const octokit = useMemo(
+    () => (token ? createClient(token) : null),
+    [token]
+  );
 
   const { items, loading, error, lastRefresh, refresh } = useGithubData(
     octokit,
@@ -37,7 +35,7 @@ export function App({ octokit, configPath }: AppProps) {
     config.defaults.maxPrsPerRepo
   );
 
-  // Filter items
+  // Filter and sort
   const filtered = useMemo(() => {
     let result = [...items];
 
@@ -50,17 +48,12 @@ export function App({ octokit, configPath }: AppProps) {
       );
     }
 
-    // Sort
     result.sort((a, b) => {
       switch (sort) {
         case 'updated':
-          return (
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         case 'created':
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'repo': {
           const repoA = `${a.repo.owner}/${a.repo.name}`;
           const repoB = `${b.repo.owner}/${b.repo.name}`;
@@ -68,11 +61,7 @@ export function App({ octokit, configPath }: AppProps) {
         }
         case 'status': {
           const priority: Record<string, number> = {
-            failure: 0,
-            pending: 1,
-            mixed: 2,
-            none: 3,
-            success: 4,
+            failure: 0, pending: 1, mixed: 2, none: 3, success: 4,
           };
           return (priority[a.ciStatus] ?? 3) - (priority[b.ciStatus] ?? 3);
         }
@@ -98,9 +87,7 @@ export function App({ octokit, configPath }: AppProps) {
 
   const openSelected = useCallback(() => {
     const item = filtered[cursorIndex];
-    if (item) {
-      openUrl(item.url);
-    }
+    if (item) window.open(item.url, '_blank');
   }, [filtered, cursorIndex]);
 
   const cycleFilter = useCallback(() => {
@@ -118,6 +105,25 @@ export function App({ octokit, configPath }: AppProps) {
     });
   }, []);
 
+  const handleSetFilter = useCallback((mode: FilterMode) => {
+    setFilter(mode);
+    setCursorIndex(0);
+  }, []);
+
+  const handleSetSort = useCallback((key: SortMode) => {
+    setSort(key);
+  }, []);
+
+  const handleSignOut = useCallback(() => {
+    clearToken();
+    setTokenState(null);
+  }, []);
+
+  const handleSaveToken = useCallback((t: string) => {
+    saveToken(t);
+    setTokenState(t);
+  }, []);
+
   useKeyboardShortcuts({
     viewMode,
     setViewMode,
@@ -126,36 +132,43 @@ export function App({ octokit, configPath }: AppProps) {
     cycleFilter,
     cycleSort,
     refresh,
-    exit,
   });
 
+  if (!token) {
+    return <TokenSetup onSave={handleSaveToken} />;
+  }
+
   return (
-    <Box flexDirection="column">
+    <div className="app">
       <Header
         loading={loading}
         lastRefresh={lastRefresh}
         repoCount={enabledRepos.length}
         itemCount={filtered.length}
+        onOpenRepos={() => setViewMode('repos')}
+        onSignOut={handleSignOut}
       />
+      <FilterBar active={filter} onFilter={handleSetFilter} />
+      <PRTable
+        items={filtered}
+        cursorIndex={cursorIndex}
+        sort={sort}
+        onSort={handleSetSort}
+      />
+      <StatusBar error={error} />
 
-      {viewMode === 'help' ? (
-        <HelpOverlay />
-      ) : viewMode === 'repos' ? (
+      {viewMode === 'help' && (
+        <HelpModal onClose={() => setViewMode('list')} />
+      )}
+      {viewMode === 'repos' && (
         <RepoManager
           repos={config.repos}
           onToggle={toggleRepo}
           onRemove={removeRepo}
           onAdd={addRepo}
-          onExit={() => setViewMode('list')}
+          onClose={() => setViewMode('list')}
         />
-      ) : (
-        <>
-          <FilterBar active={filter} />
-          <PRList items={filtered} cursorIndex={cursorIndex} />
-        </>
       )}
-
-      <StatusBar filter={filter} sort={sort} error={error} />
-    </Box>
+    </div>
   );
 }

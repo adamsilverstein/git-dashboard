@@ -1,22 +1,29 @@
 import React from 'react';
-import { Box, Text } from 'ink';
 import type { FilterMode } from '../types.js';
 
-const FILTERS: FilterMode[] = ['all', 'failing', 'needs-review'];
+const FILTERS: { key: FilterMode; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'failing', label: 'Failing CI' },
+  { key: 'needs-review', label: 'Needs Review' },
+];
 
 interface FilterBarProps {
   active: FilterMode;
+  onFilter: (mode: FilterMode) => void;
 }
 
-export function FilterBar({ active }: FilterBarProps) {
-  if (active === 'all') return null;
-
+export function FilterBar({ active, onFilter }: FilterBarProps) {
   return (
-    <Box paddingX={1}>
-      <Text color="yellow">
-        Showing: {active === 'failing' ? 'Failing CI only' : 'Needs review only'}
-      </Text>
-      <Text color="gray"> (press f to cycle)</Text>
-    </Box>
+    <div className="filter-bar">
+      {FILTERS.map(({ key, label }) => (
+        <button
+          key={key}
+          className={`filter-pill ${active === key ? 'filter-active' : ''}`}
+          onClick={() => onFilter(key)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }

@@ -1,33 +1,22 @@
 import React from 'react';
-import { Box, Text } from 'ink';
-import type { FilterMode, SortMode } from '../types.js';
 
 interface StatusBarProps {
-  filter: FilterMode;
-  sort: SortMode;
   error: string | null;
 }
 
-export function StatusBar({ filter, sort, error }: StatusBarProps) {
+export function StatusBar({ error }: StatusBarProps) {
   return (
-    <Box flexDirection="row" justifyContent="space-between" paddingX={1}>
-      <Box>
-        {error ? (
-          <Text color="red">Error: {error}</Text>
-        ) : (
-          <>
-            <Text color="gray">Filter: </Text>
-            <Text color={filter === 'all' ? 'gray' : 'yellow'} bold={filter !== 'all'}>
-              {filter}
-            </Text>
-            <Text color="gray"> | Sort: </Text>
-            <Text color="gray">{sort}</Text>
-          </>
-        )}
-      </Box>
-      <Box>
-        <Text color="gray">? help · r refresh · c repos · q quit</Text>
-      </Box>
-    </Box>
+    <footer className="status-bar">
+      {error ? (
+        <span className="status-error">Error: {error}</span>
+      ) : (
+        <span className="status-shortcuts">
+          <kbd>?</kbd> help &middot; <kbd>j</kbd>/<kbd>k</kbd> navigate &middot;{' '}
+          <kbd>Enter</kbd> open &middot; <kbd>f</kbd> filter &middot;{' '}
+          <kbd>s</kbd> sort &middot; <kbd>r</kbd> refresh &middot;{' '}
+          <kbd>c</kbd> repos
+        </span>
+      )}
+    </footer>
   );
 }
