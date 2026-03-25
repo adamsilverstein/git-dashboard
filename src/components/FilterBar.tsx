@@ -1,5 +1,5 @@
-import React, { type RefObject } from 'react';
-import type { FilterMode, ItemTypeFilter } from '../types.js';
+import React, { useState, type RefObject } from 'react';
+import type { FilterMode, ItemTypeFilter, RepoConfig } from '../types.js';
 
 const FILTERS: { key: FilterMode; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -25,9 +25,14 @@ interface FilterBarProps {
   searchInputRef: RefObject<HTMLInputElement>;
   itemTypeFilter: ItemTypeFilter;
   onSetItemType: (type: ItemTypeFilter) => void;
+  hiddenRepos?: RepoConfig[];
+  onRestoreRepo?: (owner: string, name: string) => void;
 }
 
-export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, searchQuery, onSearchChange, searchInputRef, itemTypeFilter, onSetItemType }: FilterBarProps) {
+export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, searchQuery, onSearchChange, searchInputRef, itemTypeFilter, onSetItemType, hiddenRepos, onRestoreRepo }: FilterBarProps) {
+  const [showHiddenDropdown, setShowHiddenDropdown] = useState(false);
+  const hiddenCount = hiddenRepos?.length ?? 0;
+
   return (
     <div className="filter-bar">
       <button
@@ -58,6 +63,39 @@ export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, 
           {label}
         </button>
       ))}
+      {hiddenCount > 0 && (
+        <>
+          <span className="filter-divider" />
+          <div className="hidden-repos-wrapper">
+            <button
+              className="filter-pill hidden-repos-pill"
+              onClick={() => setShowHiddenDropdown((prev) => !prev)}
+              title="Show hidden repositories"
+            >
+              {hiddenCount} hidden
+            </button>
+            {showHiddenDropdown && (
+              <div className="hidden-repos-dropdown">
+                <div className="hidden-repos-header">Hidden Repositories</div>
+                {hiddenRepos!.map((repo) => (
+                  <button
+                    key={`${repo.owner}/${repo.name}`}
+                    className="hidden-repo-item"
+                    onClick={() => {
+                      onRestoreRepo?.(repo.owner, repo.name);
+                      if (hiddenCount <= 1) setShowHiddenDropdown(false);
+                    }}
+                    title={`Restore ${repo.owner}/${repo.name}`}
+                  >
+                    <span className="hidden-repo-name">{repo.owner}/{repo.name}</span>
+                    <span className="hidden-repo-restore">restore</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
       <span className="filter-divider" />
       <input
         ref={searchInputRef}

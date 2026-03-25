@@ -48,10 +48,19 @@ export function useConfig() {
     }));
   }, []);
 
+  const toggleRepoByName = useCallback((owner: string, name: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      repos: prev.repos.map((r) =>
+        r.owner === owner && r.name === name ? { ...r, enabled: !r.enabled } : r
+      ),
+    }));
+  }, []);
+
   const enabledRepos = useMemo(
     () => config.repos.filter((r) => r.enabled),
     [config.repos]
   );
 
-  return { config, enabledRepos, addRepo, removeRepo, toggleRepo };
+  return { config, enabledRepos, addRepo, removeRepo, toggleRepo, toggleRepoByName };
 }

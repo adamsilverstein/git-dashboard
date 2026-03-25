@@ -1091,3 +1091,99 @@ a {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* ── Repo Hide Button (in table row) ───────────────────────── */
+.repo-name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.repo-hide-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.pr-row:hover .repo-hide-btn {
+  display: inline-flex;
+}
+
+.repo-hide-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(248, 81, 73, 0.1);
+}
+
+/* ── Hidden Repos Indicator ────────────────────────────────── */
+.hidden-repos-wrapper {
+  position: relative;
+}
+
+.hidden-repos-pill {
+  color: var(--yellow) !important;
+  border-color: var(--yellow) !important;
+}
+
+.hidden-repos-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 240px;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.hidden-repos-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hidden-repo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.hidden-repo-item:last-child {
+  border-bottom: none;
+}
+
+.hidden-repo-item:hover {
+  background: var(--bg-hover);
+}
+
+.hidden-repo-name {
+  color: var(--text-muted);
+}
+
+.hidden-repo-restore {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
