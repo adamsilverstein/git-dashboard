@@ -58,6 +58,7 @@ export function PRRow({ item, selected, unseen, onPreview, onOpen, onHideRepo }:
               className="repo-hide-btn"
               onClick={handleHideRepo}
               title={`Hide ${item.repo.owner}/${item.repo.name}`}
+              aria-label={`Hide repository ${item.repo.owner}/${item.repo.name}`}
             >
               ✕
             </button>

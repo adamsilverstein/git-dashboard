@@ -1,4 +1,4 @@
-import React, { useState, type RefObject } from 'react';
+import React, { useState, useEffect, useRef, type RefObject } from 'react';
 import type { FilterMode, ItemTypeFilter, RepoConfig } from '../types.js';
 
 const FILTERS: { key: FilterMode; label: string }[] = [
@@ -32,6 +32,24 @@ interface FilterBarProps {
 export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, searchQuery, onSearchChange, searchInputRef, itemTypeFilter, onSetItemType, hiddenRepos, onRestoreRepo }: FilterBarProps) {
   const [showHiddenDropdown, setShowHiddenDropdown] = useState(false);
   const hiddenCount = hiddenRepos?.length ?? 0;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showHiddenDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowHiddenDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showHiddenDropdown]);
+
+  // Reset dropdown when all repos are restored
+  useEffect(() => {
+    if (hiddenCount === 0) setShowHiddenDropdown(false);
+  }, [hiddenCount]);
 
   return (
     <div className="filter-bar">
@@ -66,7 +84,7 @@ export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, 
       {hiddenCount > 0 && (
         <>
           <span className="filter-divider" />
-          <div className="hidden-repos-wrapper">
+          <div className="hidden-repos-wrapper" ref={dropdownRef}>
             <button
               className="filter-pill hidden-repos-pill"
               onClick={() => setShowHiddenDropdown((prev) => !prev)}
@@ -83,7 +101,6 @@ export function FilterBar({ active, onFilter, mineOnly, onToggleMine, username, 
                     className="hidden-repo-item"
                     onClick={() => {
                       onRestoreRepo?.(repo.owner, repo.name);
-                      if (hiddenCount <= 1) setShowHiddenDropdown(false);
                     }}
                     title={`Restore ${repo.owner}/${repo.name}`}
                   >
