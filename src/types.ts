@@ -17,6 +17,7 @@ export type CIStatus = 'success' | 'failure' | 'pending' | 'none' | 'mixed';
 export type SortMode = 'updated' | 'created' | 'repo' | 'status';
 export type FilterMode = 'all' | 'failing' | 'needs-review';
 export type ViewMode = 'list' | 'repos' | 'help';
+export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface ReviewState {
   approvals: number;
