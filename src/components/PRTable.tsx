@@ -12,9 +12,10 @@ interface PRTableProps {
   onPreview: (item: PRItem) => void;
   isUnseen: (pr: PRItem) => boolean;
   onOpen: (pr: PRItem) => void;
+  onHideRepo?: (owner: string, name: string) => void;
 }
 
-export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPreview, isUnseen, onOpen }: PRTableProps) {
+export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPreview, isUnseen, onOpen, onHideRepo }: PRTableProps) {
   if (items.length === 0) {
     return (
       <div className="empty-state">
@@ -48,7 +49,7 @@ export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPre
         </thead>
         <tbody>
           {items.map((item, i) => (
-            <PRRow key={`${item.kind}-${item.id}`} item={item} selected={i === cursorIndex} unseen={isUnseen(item)} onPreview={onPreview} onOpen={onOpen} />
+            <PRRow key={`${item.kind}-${item.id}`} item={item} selected={i === cursorIndex} unseen={isUnseen(item)} onPreview={onPreview} onOpen={onOpen} onHideRepo={onHideRepo} />
           ))}
         </tbody>
       </table>

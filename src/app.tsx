@@ -23,7 +23,7 @@ const ITEM_TYPE_CYCLE: ItemTypeFilter[] = ['both', 'prs', 'issues'];
 
 export function App() {
   const [token, setTokenState] = useState<string | null>(() => getToken());
-  const { config, enabledRepos, addRepo, removeRepo, toggleRepo } = useConfig();
+  const { config, enabledRepos, addRepo, removeRepo, toggleRepo, toggleRepoByName } = useConfig();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [cursorIndex, setCursorIndex] = useState(0);
   const [filter, setFilter] = useState<FilterMode>(config.defaults.filter);
@@ -274,6 +274,11 @@ export function App() {
     [items, isUnseen]
   );
 
+  const hiddenRepos = useMemo(
+    () => config.repos.filter((r) => !r.enabled),
+    [config.repos]
+  );
+
   const shortcutActions = useMemo(
     () => ({
       viewMode,
@@ -321,6 +326,8 @@ export function App() {
         searchInputRef={searchInputRef}
         itemTypeFilter={itemTypeFilter}
         onSetItemType={setItemTypeFilter}
+        hiddenRepos={hiddenRepos}
+        onRestoreRepo={toggleRepoByName}
       />
       <PRTable
         items={filtered}
@@ -331,6 +338,7 @@ export function App() {
         onPreview={handlePreview}
         isUnseen={isUnseen}
         onOpen={markSeen}
+        onHideRepo={toggleRepoByName}
       />
       <StatusBar error={error} failedRepos={failedRepos} searchQuery={searchQuery} matchCount={filtered.length} totalCount={items.length} />
 

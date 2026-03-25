@@ -11,9 +11,10 @@ interface PRRowProps {
   unseen: boolean;
   onPreview: (item: PRItem) => void;
   onOpen: (pr: PRItem) => void;
+  onHideRepo?: (owner: string, name: string) => void;
 }
 
-export function PRRow({ item, selected, unseen, onPreview, onOpen }: PRRowProps) {
+export function PRRow({ item, selected, unseen, onPreview, onOpen, onHideRepo }: PRRowProps) {
   const ref = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
@@ -28,6 +29,11 @@ export function PRRow({ item, selected, unseen, onPreview, onOpen }: PRRowProps)
   };
 
   const isPR = item.kind === 'pr';
+
+  const handleHideRepo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onHideRepo?.(item.repo.owner, item.repo.name);
+  };
 
   return (
     <tr
@@ -45,7 +51,19 @@ export function PRRow({ item, selected, unseen, onPreview, onOpen }: PRRowProps)
       </td>
       <td className="col-repo">
         {unseen && <span className="unseen-dot" title="New activity" />}
-        {item.repo.owner}/{item.repo.name}
+        <span className="repo-name-cell">
+          {item.repo.owner}/{item.repo.name}
+          {onHideRepo && (
+            <button
+              className="repo-hide-btn"
+              onClick={handleHideRepo}
+              title={`Hide ${item.repo.owner}/${item.repo.name}`}
+              aria-label={`Hide repository ${item.repo.owner}/${item.repo.name}`}
+            >
+              ✕
+            </button>
+          )}
+        </span>
       </td>
       <td className="col-number">#{item.number}</td>
       <td className="col-state">
