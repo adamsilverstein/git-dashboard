@@ -3,15 +3,16 @@ import React from 'react';
 const SHORTCUTS = [
   ['j / ↓', 'Move down'],
   ['k / ↑', 'Move up'],
-  ['Enter', 'Open PR in browser'],
+  ['Enter', 'Open item in browser'],
   ['/', 'Focus search'],
   ['Esc', 'Clear search'],
   ['m', 'Toggle mine only / everyone'],
+  ['t', 'Cycle type (both / PRs / issues)'],
   ['f', 'Cycle filter (all / failing / needs-review)'],
   ['s', 'Cycle sort (updated / created / repo / status)'],
   ['r', 'Refresh data (resets auto-refresh timer)'],
   ['c', 'Configure repos'],
-  ['t', 'Cycle theme (dark / light / system)'],
+  ['T', 'Cycle theme (dark / light / system)'],
   ['?', 'Toggle this help'],
 ];
 

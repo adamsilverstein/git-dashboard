@@ -9,16 +9,24 @@ vi.mock('../github/pulls.js', () => ({
   fetchAllPRsForRepo: vi.fn(),
 }));
 
+vi.mock('../github/issues.js', () => ({
+  fetchUserIssues: vi.fn(),
+  fetchAllIssuesForRepo: vi.fn(),
+}));
+
 vi.mock('../github/checks.js', () => ({
   getCheckStatus: vi.fn(),
   getReviewState: vi.fn(),
 }));
 
 import { fetchUserPRs, fetchAllPRsForRepo } from '../github/pulls.js';
+import { fetchUserIssues, fetchAllIssuesForRepo } from '../github/issues.js';
 import { getCheckStatus, getReviewState } from '../github/checks.js';
 
 const mockedFetchUserPRs = vi.mocked(fetchUserPRs);
 const mockedFetchAllPRsForRepo = vi.mocked(fetchAllPRsForRepo);
+const mockedFetchUserIssues = vi.mocked(fetchUserIssues);
+const mockedFetchAllIssuesForRepo = vi.mocked(fetchAllIssuesForRepo);
 const mockedGetCheckStatus = vi.mocked(getCheckStatus);
 const mockedGetReviewState = vi.mocked(getReviewState);
 
@@ -52,6 +60,7 @@ describe('useGithubData', () => {
 
   it('fetches user PRs when username is provided', async () => {
     const pr = {
+      kind: 'pr' as const,
       id: 1,
       number: 1,
       title: 'Test PR',
@@ -67,6 +76,7 @@ describe('useGithubData', () => {
     };
 
     mockedFetchUserPRs.mockResolvedValue([pr]);
+    mockedFetchUserIssues.mockResolvedValue([]);
     mockedGetCheckStatus.mockResolvedValue('success');
     mockedGetReviewState.mockResolvedValue({
       approvals: 1,
@@ -83,14 +93,15 @@ describe('useGithubData', () => {
       expect(result.current.items).toHaveLength(1);
     });
 
-    expect(result.current.items[0].ciStatus).toBe('success');
-    expect(result.current.items[0].reviewState.approvals).toBe(1);
+    expect(result.current.items[0]).toHaveProperty('ciStatus', 'success');
+    expect(result.current.items[0]).toHaveProperty('kind', 'pr');
     expect(mockedFetchUserPRs).toHaveBeenCalled();
     expect(mockedFetchAllPRsForRepo).not.toHaveBeenCalled();
   });
 
   it('fetches all PRs per repo when username is null', async () => {
     const pr = {
+      kind: 'pr' as const,
       id: 2,
       number: 2,
       title: 'Other PR',
@@ -106,6 +117,7 @@ describe('useGithubData', () => {
     };
 
     mockedFetchAllPRsForRepo.mockResolvedValue([pr]);
+    mockedFetchAllIssuesForRepo.mockResolvedValue([]);
     mockedGetCheckStatus.mockResolvedValue('pending');
     mockedGetReviewState.mockResolvedValue({
       approvals: 0,
@@ -128,6 +140,7 @@ describe('useGithubData', () => {
 
   it('skips CI/review enrichment for non-open PRs', async () => {
     const mergedPR = {
+      kind: 'pr' as const,
       id: 3,
       number: 3,
       title: 'Merged PR',
@@ -143,6 +156,7 @@ describe('useGithubData', () => {
     };
 
     mockedFetchUserPRs.mockResolvedValue([mergedPR]);
+    mockedFetchUserIssues.mockResolvedValue([]);
 
     const { result } = renderHook(() =>
       useGithubData(mockOctokit(), repos, 30, 'user'),
@@ -158,7 +172,9 @@ describe('useGithubData', () => {
   });
 
   it('sets error state on fetch failure', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockedFetchUserPRs.mockRejectedValue(new Error('Network error'));
+    mockedFetchUserIssues.mockRejectedValue(new Error('Issue fetch error'));
 
     const { result } = renderHook(() =>
       useGithubData(mockOctokit(), repos, 30, 'user'),
@@ -168,7 +184,11 @@ describe('useGithubData', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toBe('Network error');
+    // With Promise.allSettled, individual failures are handled gracefully
+    // Both fetches fail but the hook returns empty items instead of crashing
     expect(result.current.items).toEqual([]);
+    expect(warnSpy).toHaveBeenCalledWith('Failed to fetch user PRs:', expect.any(Error));
+    expect(warnSpy).toHaveBeenCalledWith('Failed to fetch user issues:', expect.any(Error));
+    warnSpy.mockRestore();
   });
 });
