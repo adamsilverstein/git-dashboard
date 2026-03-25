@@ -38,7 +38,20 @@ export function App() {
   const [itemTypeFilter, setItemTypeFilter] = useState<ItemTypeFilter>('both');
   const [previewItem, setPreviewItem] = useState<PRItem | null>(null);
   const [prStateFilters, setPRStateFilters] = useState<Set<PRStateFilterKey>>(
-    () => new Set<PRStateFilterKey>(['draft', 'open'])
+    () => {
+      try {
+        const stored = localStorage.getItem('gh-dashboard-pr-state-filters');
+        if (stored) {
+          const parsed = JSON.parse(stored) as string[];
+          if (Array.isArray(parsed)) {
+            return new Set<PRStateFilterKey>(
+              parsed.filter((k): k is PRStateFilterKey => k === 'draft' || k === 'open' || k === 'merged')
+            );
+          }
+        }
+      } catch { /* ignore invalid stored data */ }
+      return new Set<PRStateFilterKey>(['draft', 'open']);
+    }
   );
 
   const { markSeen, isUnseen } = useLastSeen();
@@ -104,6 +117,11 @@ export function App() {
     });
     setCursorIndex(0);
   }, []);
+
+  // Persist PR state filters to localStorage
+  useEffect(() => {
+    localStorage.setItem('gh-dashboard-pr-state-filters', JSON.stringify([...prStateFilters]));
+  }, [prStateFilters]);
 
   // Filter and sort
   const filtered = useMemo(() => {

@@ -193,11 +193,17 @@ a {
 
 /* ── PR State Pills ─────────────────────────────────────────── */
 .pr-state-pill {
-  opacity: 0.6;
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.pr-state-pill:hover {
+  opacity: 0.8;
 }
 
 .pr-state-pill.pr-state-active {
   opacity: 1;
+  border-style: solid;
 }
 
 .pr-state-pill.pr-state-draft.pr-state-active {
