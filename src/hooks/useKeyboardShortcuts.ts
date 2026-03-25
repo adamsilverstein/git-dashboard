@@ -25,12 +25,18 @@ export function useKeyboardShortcuts(actions: ShortcutActions) {
       const { viewMode, setViewMode } = actions;
 
       if (viewMode === 'help') {
-        if (e.key === '?' || e.key === 'Escape') setViewMode('list');
+        if (e.key === '?' || e.key === 'Escape') {
+          e.preventDefault();
+          setViewMode('list');
+        }
         return;
       }
 
       if (viewMode === 'repos') {
-        if (e.key === 'Escape') setViewMode('list');
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setViewMode('list');
+        }
         return;
       }
 

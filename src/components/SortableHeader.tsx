@@ -21,6 +21,14 @@ export function SortableHeader({
     <th
       className={`sortable-header ${isActive ? 'sort-active' : ''} ${className ?? ''}`}
       onClick={() => onSort(sortKey)}
+      tabIndex={0}
+      role="button"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSort(sortKey);
+        }
+      }}
     >
       {label}
       {isActive && <span className="sort-arrow"> ▼</span>}
