@@ -90,7 +90,6 @@ describe('DashboardItem type discrimination', () => {
   });
 
   it('does not show labels for PRs', () => {
-    renderRow(makePR({ title: 'Some PR' }));
     // PRs don't have a label-badges container
     const { container } = render(
       <table>

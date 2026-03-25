@@ -43,6 +43,9 @@ export async function fetchUserIssues(
       const repoName = repoParts.pop() ?? '';
       const repoOwner = repoParts.pop() ?? '';
 
+      // Skip items with invalid/missing repository URL
+      if (!repoOwner || !repoName) continue;
+
       allItems.push({
         kind: 'issue',
         id: item.id,

@@ -110,9 +110,18 @@ export function useGithubData(
             }
           }
           allIssues = [];
-          for (const result of issueResults) {
+          for (let i = 0; i < issueResults.length; i++) {
+            const result = issueResults[i];
             if (result.status === 'fulfilled') {
               allIssues = allIssues.concat(result.value);
+            } else {
+              const repo = currentRepos[i];
+              repoErrors.push({
+                repo: `${repo.owner}/${repo.name}`,
+                message: `Issues: ${result.reason instanceof Error
+                  ? result.reason.message
+                  : 'Unknown error'}`,
+              });
             }
           }
           if (!cancelled) {
