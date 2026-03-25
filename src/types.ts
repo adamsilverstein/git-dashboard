@@ -18,6 +18,11 @@ export type SortMode = 'updated' | 'created' | 'repo' | 'status';
 export type FilterMode = 'all' | 'failing' | 'needs-review';
 export type ViewMode = 'list' | 'repos' | 'help';
 
+export interface RepoFetchError {
+  repo: string;
+  message: string;
+}
+
 export interface ReviewState {
   approvals: number;
   changesRequested: number;
