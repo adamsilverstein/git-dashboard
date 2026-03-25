@@ -6,13 +6,14 @@ export async function fetchPullsForRepo(
   repo: RepoConfig,
   maxPerRepo: number
 ): Promise<PRItem[]> {
+  const perPage = Math.max(1, Math.min(maxPerRepo, 100));
   const { data } = await octokit.pulls.list({
     owner: repo.owner,
     repo: repo.name,
     state: 'open',
     sort: 'updated',
     direction: 'desc',
-    per_page: maxPerRepo,
+    per_page: perPage,
   });
 
   return data.map((pr) => ({

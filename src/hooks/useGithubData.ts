@@ -45,7 +45,12 @@ export function useGithubData(
     const currentRepos = reposRef.current;
     const max = maxRef.current;
 
-    if (!client || currentRepos.length === 0) return;
+    if (!client || currentRepos.length === 0) {
+      setItems([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     if (fetchingRef.current) return;
 
     let cancelled = false;
