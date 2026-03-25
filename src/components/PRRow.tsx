@@ -35,8 +35,12 @@ export function PRRow({ item, selected }: PRRowProps) {
         {item.repo.owner}/{item.repo.name}
       </td>
       <td className="col-number">#{item.number}</td>
+      <td className="col-state">
+        <span className={`state-badge state-${item.state}`}>
+          {item.state === 'merged' ? 'merged' : item.state === 'closed' ? 'closed' : item.draft ? 'draft' : 'open'}
+        </span>
+      </td>
       <td className="col-title">
-        {item.draft && <span className="draft-badge">draft</span>}
         {item.title}
       </td>
       <td className="col-author">@{item.author}</td>

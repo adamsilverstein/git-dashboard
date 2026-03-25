@@ -40,6 +40,7 @@ export function PRTable({ items, cursorIndex, sort, onSort }: PRTableProps) {
               className="col-repo"
             />
             <th className="col-number">#</th>
+            <th className="col-state">State</th>
             <th className="col-title">Title</th>
             <th className="col-author">Author</th>
             <SortableHeader

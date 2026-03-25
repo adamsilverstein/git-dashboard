@@ -269,16 +269,40 @@ a {
   white-space: nowrap;
 }
 
-.draft-badge {
+.col-state {
+  width: 72px;
+}
+
+.state-badge {
   display: inline-block;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
   font-size: 11px;
-  padding: 0 6px;
+  padding: 1px 8px;
   border-radius: 10px;
-  margin-right: 6px;
-  vertical-align: middle;
+  font-weight: 500;
+}
+
+.state-open {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.state-merged {
+  background: rgba(188, 140, 255, 0.15);
+  color: var(--purple);
+  border: 1px solid rgba(188, 140, 255, 0.3);
+}
+
+.state-closed {
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.state-draft {
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 
 /* ── CI Badge ───────────────────────────────────────────────── */

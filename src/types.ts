@@ -24,6 +24,8 @@ export interface ReviewState {
   commentCount: number;
 }
 
+export type PRState = 'open' | 'closed' | 'merged';
+
 export interface PRItem {
   id: number;
   number: number;
@@ -36,4 +38,5 @@ export interface PRItem {
   ciStatus: CIStatus;
   reviewState: ReviewState;
   draft: boolean;
+  state: PRState;
 }

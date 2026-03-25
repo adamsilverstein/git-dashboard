@@ -8,7 +8,7 @@ const DEFAULT_CONFIG: Config = {
   defaults: {
     sort: 'updated',
     filter: 'all',
-    maxPrsPerRepo: 10,
+    maxPrsPerRepo: 30,
   },
 };
 
