@@ -171,6 +171,59 @@ describe('useGithubData', () => {
     expect(mockedGetReviewState).not.toHaveBeenCalled();
   });
 
+  it('re-fetches when username changes from null during in-flight request', async () => {
+    // Simulate the initial load scenario: first fetch starts with username=null,
+    // then username resolves to a value while the first fetch is still running.
+    let resolvePerRepo: (value: never[]) => void;
+    const slowPerRepo = new Promise<never[]>((r) => { resolvePerRepo = r; });
+    mockedFetchAllPRsForRepo.mockReturnValue(slowPerRepo);
+    mockedFetchAllIssuesForRepo.mockResolvedValue([]);
+
+    const pr = {
+      kind: 'pr' as const,
+      id: 1,
+      number: 1,
+      title: 'User PR',
+      author: 'user',
+      repo: { owner: 'acme', name: 'web' },
+      url: 'https://github.com/acme/web/pull/1',
+      updatedAt: '2026-01-15T10:00:00Z',
+      createdAt: '2026-01-10T08:00:00Z',
+      ciStatus: 'none' as const,
+      reviewState: { approvals: 0, changesRequested: 0, commentCount: 0 },
+      draft: false,
+      state: 'open' as const,
+    };
+    mockedFetchUserPRs.mockResolvedValue([pr]);
+    mockedFetchUserIssues.mockResolvedValue([]);
+    mockedGetCheckStatus.mockResolvedValue('success');
+    mockedGetReviewState.mockResolvedValue({
+      approvals: 1, changesRequested: 0, commentCount: 0,
+    });
+
+    const octokit = mockOctokit();
+    // Start with username=null (triggers per-repo fetch)
+    const { result, rerender } = renderHook(
+      ({ username }) => useGithubData(octokit, repos, 30, username),
+      { initialProps: { username: null as string | null } },
+    );
+
+    // While the per-repo fetch is still pending, change username
+    rerender({ username: 'user' });
+
+    // Resolve the slow per-repo fetch (should be cancelled/ignored)
+    resolvePerRepo!([]);
+
+    // The hook should complete with data from the user fetch
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.items).toHaveLength(1);
+    });
+
+    expect(result.current.items[0]).toHaveProperty('title', 'User PR');
+    expect(mockedFetchUserPRs).toHaveBeenCalled();
+  });
+
   it('sets error state on fetch failure', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockedFetchUserPRs.mockRejectedValue(new Error('Network error'));
