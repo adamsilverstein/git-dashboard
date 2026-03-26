@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { STORAGE_KEYS } from '../src/constants.js';
 
 // These tests run against the built app with no real GitHub token.
 // They test the UI flows that don't require API calls (token setup,
@@ -32,13 +33,13 @@ test.describe('Dashboard (with token)', () => {
   test.beforeEach(async ({ page }) => {
     // Set a fake token in localStorage before loading
     await page.goto('/');
-    await page.evaluate(() => {
-      localStorage.setItem('gh-dashboard-token', 'ghp_fake_token');
-      localStorage.setItem('gh-dashboard-config', JSON.stringify({
+    await page.evaluate((keys) => {
+      localStorage.setItem(keys.TOKEN, 'ghp_fake_token');
+      localStorage.setItem(keys.CONFIG, JSON.stringify({
         repos: [{ owner: 'test', name: 'repo', enabled: true }],
         defaults: { sort: 'updated', filter: 'all', maxPrsPerRepo: 30, autoRefreshInterval: 0 },
       }));
-    });
+    }, STORAGE_KEYS);
     await page.reload();
   });
 
@@ -107,9 +108,9 @@ test.describe('Dashboard (with token)', () => {
 test.describe('Theme', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => {
-      localStorage.setItem('gh-dashboard-token', 'ghp_fake_token');
-    });
+    await page.evaluate((keys) => {
+      localStorage.setItem(keys.TOKEN, 'ghp_fake_token');
+    }, STORAGE_KEYS);
     await page.reload();
   });
 
