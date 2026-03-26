@@ -138,11 +138,7 @@ export function useGithubData(
             // Only fetch CI/reviews for open PRs (closed/merged don't need it)
             if (pr.state !== 'open') return pr;
 
-            const promises: [
-              Promise<import('../types.js').CIStatus>,
-              Promise<import('../types.js').ReviewState>,
-              Promise<boolean>,
-            ] = [
+            const [ciResult, reviewResult, requestedResult] = await Promise.allSettled([
               getCheckStatus(
                 client,
                 pr.repo.owner,
@@ -153,9 +149,7 @@ export function useGithubData(
               authUser
                 ? isRequestedReviewer(client, pr.repo.owner, pr.repo.name, pr.number, authUser)
                 : Promise.resolve(false),
-            ];
-
-            const [ciResult, reviewResult, requestedResult] = await Promise.allSettled(promises);
+            ]);
 
             return {
               ...pr,
