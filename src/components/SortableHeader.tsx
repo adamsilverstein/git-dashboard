@@ -25,7 +25,9 @@ export function SortableHeader({
       className={`sortable-header ${isActive ? 'sort-active' : ''} ${className ?? ''}`}
       onClick={() => onSort(sortKey)}
       tabIndex={0}
-      role="button"
+      role="columnheader"
+      scope="col"
+      aria-sort={isActive ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -34,7 +36,7 @@ export function SortableHeader({
       }}
     >
       {label}
-      {arrow && <span className="sort-arrow">{arrow}</span>}
+      {arrow && <span className="sort-arrow" aria-hidden="true">{arrow}</span>}
     </th>
   );
 }
