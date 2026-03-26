@@ -96,6 +96,18 @@ export function PRRow({ item, selected, unseen, onPreview, onOpen, onHideRepo }:
           item.milestone && <span className="milestone-badge">🏁 {item.milestone}</span>
         )}
       </td>
+      <td className="col-link">
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title="Open on GitHub"
+          aria-label="Open on GitHub"
+        >
+          🔗
+        </a>
+      </td>
     </tr>
   );
 }

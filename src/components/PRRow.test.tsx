@@ -103,4 +103,12 @@ describe('PRRow', () => {
       }),
     );
   });
+
+  it('renders a direct link to the PR on GitHub that opens in a new tab', () => {
+    renderRow(makePR());
+    const link = screen.getByRole('link', { name: 'Open on GitHub' });
+    expect(link).toHaveAttribute('href', 'https://github.com/acme/web/pull/42');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
 });
