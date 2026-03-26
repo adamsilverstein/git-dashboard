@@ -18,29 +18,28 @@ function createWindow() {
     callback(false);
   });
 
-  // Open external links in the default system browser instead of in the Electron app.
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  // Open http/https URLs in the system browser, swallowing Promise rejections.
+  const openExternalSafe = (rawUrl) => {
     try {
-      const parsed = new URL(url);
+      const parsed = new URL(rawUrl);
       if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-        shell.openExternal(url);
+        shell.openExternal(parsed.href).catch(() => {});
       }
     } catch {
       // Ignore invalid URLs.
     }
+  };
+
+  // Intercept window.open — always deny; open http(s) links externally.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    openExternalSafe(url);
     return { action: 'deny' };
   });
 
+  // Deny all in-app navigation by default; open http(s) links externally.
   win.webContents.on('will-navigate', (event, url) => {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-        event.preventDefault();
-        shell.openExternal(url);
-      }
-    } catch {
-      // Ignore invalid URLs.
-    }
+    event.preventDefault();
+    openExternalSafe(url);
   });
 
   win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
