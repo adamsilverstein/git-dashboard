@@ -35,7 +35,6 @@ export function useGithubData(
   maxRef.current = maxPerRepo;
   const usernameRef = useRef(username);
   usernameRef.current = username;
-  const fetchingRef = useRef(false);
 
   const repoKey = repos.map((r) => `${r.owner}/${r.name}`).join(',');
 
@@ -55,10 +54,8 @@ export function useGithubData(
       setLoading(false);
       return;
     }
-    if (fetchingRef.current) return;
 
     let cancelled = false;
-    fetchingRef.current = true;
     setLoading(true);
     setError(null);
     setFailedRepos([]);
@@ -180,7 +177,6 @@ export function useGithubData(
         if (!cancelled) {
           setLoading(false);
         }
-        fetchingRef.current = false;
       }
     })();
 
