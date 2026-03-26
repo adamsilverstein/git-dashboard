@@ -220,7 +220,7 @@ export function App() {
     });
 
     return result;
-  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, prStateFilters, isUnseen]);
+  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, prStateFilters, isUnseen, config.defaults.staleDays]);
 
   // Clamp cursor when filtered list shrinks
   useEffect(() => {
