@@ -98,9 +98,9 @@
   position: relative;
 }
 
-.hidden-repos-pill {
-  color: var(--yellow) !important;
-  border-color: var(--yellow) !important;
+.filter-pill.hidden-repos-pill {
+  color: var(--yellow);
+  border-color: var(--yellow);
 }
 
 .hidden-repos-dropdown {

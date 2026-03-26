@@ -23,20 +23,13 @@ export function SortableHeader({
   return (
     <th
       className={`sortable-header ${isActive ? 'sort-active' : ''} ${className ?? ''}`}
-      onClick={() => onSort(sortKey)}
-      tabIndex={0}
-      role="columnheader"
       scope="col"
       aria-sort={isActive ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSort(sortKey);
-        }
-      }}
     >
-      {label}
-      {arrow && <span className="sort-arrow" aria-hidden="true">{arrow}</span>}
+      <button type="button" className="sortable-header-btn" onClick={() => onSort(sortKey)}>
+        {label}
+        {arrow && <span className="sort-arrow" aria-hidden="true">{arrow}</span>}
+      </button>
     </th>
   );
 }

@@ -3,7 +3,7 @@ import type { DashboardItem } from '../types.js';
 import { STORAGE_KEYS } from '../constants.js';
 
 /** Item key used for tracking: "owner/repo#number" */
-function prKey(pr: DashboardItem): string {
+function itemKey(pr: DashboardItem): string {
   return `${pr.repo.owner}/${pr.repo.name}#${pr.number}`;
 }
 
@@ -38,7 +38,7 @@ export function hasNewActivity(
   pr: DashboardItem,
   lastSeenMap: Record<string, string>
 ): boolean {
-  const seen = lastSeenMap[prKey(pr)];
+  const seen = lastSeenMap[itemKey(pr)];
   if (!seen) return true; // never seen → new
   const seenDate = new Date(seen);
   if (isNaN(seenDate.getTime())) return true; // invalid timestamp → treat as unseen
@@ -53,7 +53,7 @@ export function useLastSeen() {
 
   const markSeen = useCallback((pr: DashboardItem) => {
     setLastSeenMap((prev) => {
-      const next = { ...prev, [prKey(pr)]: new Date().toISOString() };
+      const next = { ...prev, [itemKey(pr)]: new Date().toISOString() };
       saveLastSeen(next);
       return next;
     });

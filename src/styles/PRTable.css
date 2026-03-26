@@ -28,17 +28,26 @@
   white-space: nowrap;
 }
 
-.sortable-header {
+.sortable-header-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
   cursor: pointer;
   user-select: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
 }
 
-.sortable-header:hover {
+.sortable-header-btn:hover {
   color: var(--text);
 }
 
-.sort-active {
-  color: var(--accent) !important;
+.sort-active .sortable-header-btn {
+  color: var(--accent);
 }
 
 .sort-arrow {

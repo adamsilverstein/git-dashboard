@@ -1,9 +1,9 @@
 import type { DashboardItem, PRStateFilterKey } from '../types.js';
 
 /**
- * Filter items by PR state toggle pills (draft, open, merged).
+ * Filter items by state toggle pills (draft, open, merged).
  *
- * Issues always pass through (they aren't affected by PR state filters).
+ * Issues always pass through (they don't have PR-specific states).
  * Closed (non-merged) PRs are intentionally excluded from the toggle pills.
  * The dashboard focuses on actionable PR states: draft (in progress),
  * open (ready for review), and merged (completed). Closed-without-merge PRs

@@ -92,7 +92,6 @@ describe('DashboardItem type discrimination', () => {
   });
 
   it('does not show labels for PRs', () => {
-    // PRs don't have a label-badges container
     const { container } = render(
       <table>
         <tbody>
@@ -130,7 +129,7 @@ describe('Item type filtering logic', () => {
   ];
 
   it('shows all items when filter is "both"', () => {
-    const result = items.filter(() => true); // 'both' filter passes all
+    const result = items.filter(() => true);
     expect(result).toHaveLength(5);
   });
 
@@ -147,13 +146,10 @@ describe('Item type filtering logic', () => {
   });
 
   it('PR-specific filters only affect PRs', () => {
-    // 'failing' filter: only PRs with ciStatus === 'failure'
     const failing = items.filter(
       (item) => item.kind === 'pr' && item.ciStatus === 'failure',
     );
-    expect(failing).toHaveLength(0); // none have failure status
-
-    // No issues should pass the failing filter
+    expect(failing).toHaveLength(0);
     const issuesInFailing = failing.filter((item) => item.kind === 'issue');
     expect(issuesInFailing).toHaveLength(0);
   });
