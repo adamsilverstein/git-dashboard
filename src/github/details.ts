@@ -25,17 +25,13 @@ export async function getPRDetails(
       repo: name,
       pull_number: item.number,
     }),
-    // NOTE: per_page capped at 100. PRs with >100 check runs will show
-    // only the first page. Pagination can be added if needed.
-    octokit.checks.listForRef({
+    octokit.paginate(octokit.checks.listForRef, {
       owner,
       repo: name,
       ref: `pull/${item.number}/head`,
       per_page: 100,
     }),
-    // NOTE: per_page capped at 100. PRs with >100 reviews will show
-    // only the first page. Pagination can be added if needed.
-    octokit.pulls.listReviews({
+    octokit.paginate(octokit.pulls.listReviews, {
       owner,
       repo: name,
       pull_number: item.number,
@@ -46,10 +42,10 @@ export async function getPRDetails(
   const pr = prRes.status === 'fulfilled' ? prRes.value.data : null;
   const checks =
     checksRes.status === 'fulfilled'
-      ? checksRes.value.data.check_runs
+      ? checksRes.value
       : [];
   const reviews =
-    reviewsRes.status === 'fulfilled' ? reviewsRes.value.data : [];
+    reviewsRes.status === 'fulfilled' ? reviewsRes.value : [];
 
   // Deduplicate reviewers to their latest review state
   const reviewerMap = new Map<string, string>();
