@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { PRRow } from '../components/PRRow.js';
 import type { PRItem } from '../types.js';
 
@@ -25,15 +25,17 @@ function makePR(overrides: Partial<PRItem> = {}): PRItem {
 
 function renderRow(item: PRItem, selected = false) {
   const onPreview = vi.fn();
+  const onOpen = vi.fn();
   return {
     ...render(
       <table>
         <tbody>
-          <PRRow item={item} selected={selected} onPreview={onPreview} />
+          <PRRow item={item} selected={selected} unseen={false} onPreview={onPreview} onOpen={onOpen} />
         </tbody>
       </table>,
     ),
     onPreview,
+    onOpen,
   };
 }
 
@@ -105,10 +107,13 @@ describe('PRRow', () => {
   });
 
   it('renders a direct link to the PR on GitHub that opens in a new tab', () => {
-    renderRow(makePR());
+    const { onPreview, onOpen } = renderRow(makePR());
     const link = screen.getByRole('link', { name: 'Open on GitHub' });
     expect(link).toHaveAttribute('href', 'https://github.com/acme/web/pull/42');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    fireEvent.click(link);
+    expect(onPreview).not.toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
   });
 });
