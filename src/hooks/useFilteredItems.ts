@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import type { DashboardItem, FilterMode, SortMode, SortDirection, ItemTypeFilter, PRStateFilterKey } from '../types.js';
 import { filterByPRState } from '../utils/prStateFilter.js';
+import { STORAGE_KEYS } from '../constants.js';
 
 const FILTER_CYCLE: FilterMode[] = ['all', 'failing', 'needs-review', 'new-activity'];
 const SORT_CYCLE: SortMode[] = ['updated', 'created', 'repo', 'status', 'number', 'state', 'title', 'author', 'reviews'];
@@ -8,7 +9,7 @@ const ITEM_TYPE_CYCLE: ItemTypeFilter[] = ['both', 'prs', 'issues'];
 
 function loadPRStateFilters(): Set<PRStateFilterKey> {
   try {
-    const stored = localStorage.getItem('gh-dashboard-pr-state-filters');
+    const stored = localStorage.getItem(STORAGE_KEYS.PR_STATE_FILTERS);
     if (stored) {
       const parsed = JSON.parse(stored) as string[];
       if (Array.isArray(parsed)) {
@@ -40,7 +41,7 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen }
 
   // Persist PR state filters to localStorage
   useEffect(() => {
-    localStorage.setItem('gh-dashboard-pr-state-filters', JSON.stringify([...prStateFilters]));
+    localStorage.setItem(STORAGE_KEYS.PR_STATE_FILTERS, JSON.stringify([...prStateFilters]));
   }, [prStateFilters]);
 
   const togglePRStateFilter = useCallback((key: PRStateFilterKey) => {

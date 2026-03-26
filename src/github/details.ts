@@ -1,12 +1,12 @@
 import type { Octokit } from '@octokit/rest';
 import type { PRDetail, PRItem } from '../types.js';
+import { STORAGE_KEYS } from '../constants.js';
 
 // Cache with TTL to avoid redundant API calls when re-previewing the same PR.
 // Keyed by PR URL, expires after 2 minutes. Backed by localStorage for persistence
 // across page reloads.
 const CACHE_TTL_MS = 2 * 60 * 1000;
 const MAX_CACHE_SIZE = 50;
-const STORAGE_KEY = 'gh-dashboard-detail-cache';
 
 interface CacheEntry {
   data: PRDetail;
@@ -18,7 +18,7 @@ const detailCache = new Map<string, CacheEntry>();
 // Hydrate in-memory cache from localStorage on module load
 function hydrateFromStorage(): void {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.DETAIL_CACHE);
     if (!raw) return;
     const entries = JSON.parse(raw) as Record<string, CacheEntry>;
     const now = Date.now();
@@ -39,7 +39,7 @@ function persistToStorage(): void {
     for (const [key, entry] of detailCache) {
       obj[key] = entry;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    localStorage.setItem(STORAGE_KEYS.DETAIL_CACHE, JSON.stringify(obj));
   } catch {
     // Silently ignore storage failures (e.g. quota exceeded)
   }
