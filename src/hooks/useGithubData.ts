@@ -14,6 +14,17 @@ interface UseGithubDataResult {
   refresh: () => void;
 }
 
+/**
+ * Merge an enriched PR into the items array, replacing the existing entry by id.
+ */
+function replaceItem(prev: DashboardItem[], updated: DashboardItem): DashboardItem[] {
+  const idx = prev.findIndex((item) => item.id === updated.id);
+  if (idx === -1) return prev;
+  const next = [...prev];
+  next[idx] = updated;
+  return next;
+}
+
 export function useGithubData(
   octokit: Octokit | null,
   repos: RepoConfig[],
@@ -62,20 +73,30 @@ export function useGithubData(
     setLoading(true);
     setError(null);
     setFailedRepos([]);
+    setItems([]);
 
     (async () => {
       try {
         let allPRs: PRItem[];
-        let allIssues: DashboardItem[];
 
         if (user) {
-          // Use search API to get user's PRs and issues efficiently
+          // Fetch PRs and issues in parallel, streaming each into the table as it arrives
+          const prPromise = fetchUserPRs(client, currentRepos, user);
+          const issuePromise = fetchUserIssues(client, currentRepos, user);
+
+          // Stream whichever resolves first
           const [prResult, issueResult] = await Promise.allSettled([
-            fetchUserPRs(client, currentRepos, user),
-            fetchUserIssues(client, currentRepos, user),
+            prPromise.then((prs) => {
+              if (!cancelled) setItems((prev) => [...prev, ...prs]);
+              return prs;
+            }),
+            issuePromise.then((issues) => {
+              if (!cancelled) setItems((prev) => [...prev, ...issues]);
+              return issues;
+            }),
           ]);
+
           allPRs = prResult.status === 'fulfilled' ? prResult.value : [];
-          allIssues = issueResult.status === 'fulfilled' ? issueResult.value : [];
 
           if (prResult.status === 'rejected') {
             console.warn('Failed to fetch user PRs:', prResult.reason);
@@ -84,46 +105,46 @@ export function useGithubData(
             console.warn('Failed to fetch user issues:', issueResult.reason);
           }
         } else {
-          // Fallback: fetch all PRs and issues per repo
-          const [prResults, issueResults] = await Promise.all([
-            Promise.allSettled(
-              currentRepos.map((repo) => fetchAllPRsForRepo(client, repo, max))
-            ),
-            Promise.allSettled(
-              currentRepos.map((repo) => fetchAllIssuesForRepo(client, repo, max))
-            ),
-          ]);
+          // Fallback: fetch all PRs and issues per repo, streaming each repo's results
           allPRs = [];
           const repoErrors: RepoFetchError[] = [];
-          for (let i = 0; i < prResults.length; i++) {
-            const result = prResults[i];
-            if (result.status === 'fulfilled') {
-              allPRs = allPRs.concat(result.value);
-            } else {
-              const repo = currentRepos[i];
+
+          const prPromises = currentRepos.map(async (repo) => {
+            try {
+              const prs = await fetchAllPRsForRepo(client, repo, max);
+              if (!cancelled) {
+                setItems((prev) => [...prev, ...prs]);
+              }
+              return prs;
+            } catch (e) {
               repoErrors.push({
                 repo: `${repo.owner}/${repo.name}`,
-                message: result.reason instanceof Error
-                  ? result.reason.message
-                  : 'Unknown error',
+                message: e instanceof Error ? e.message : 'Unknown error',
               });
+              return [] as PRItem[];
             }
-          }
-          allIssues = [];
-          for (let i = 0; i < issueResults.length; i++) {
-            const result = issueResults[i];
-            if (result.status === 'fulfilled') {
-              allIssues = allIssues.concat(result.value);
-            } else {
-              const repo = currentRepos[i];
+          });
+
+          const issuePromises = currentRepos.map(async (repo) => {
+            try {
+              const issues = await fetchAllIssuesForRepo(client, repo, max);
+              if (!cancelled) {
+                setItems((prev) => [...prev, ...issues]);
+              }
+              return issues;
+            } catch (e) {
               repoErrors.push({
                 repo: `${repo.owner}/${repo.name}`,
-                message: `Issues: ${result.reason instanceof Error
-                  ? result.reason.message
-                  : 'Unknown error'}`,
+                message: `Issues: ${e instanceof Error ? e.message : 'Unknown error'}`,
               });
+              return [] as DashboardItem[];
             }
-          }
+          });
+
+          const prResults = await Promise.all(prPromises);
+          await Promise.all(issuePromises);
+          allPRs = prResults.flat();
+
           if (!cancelled) {
             setFailedRepos(repoErrors);
           }
@@ -131,12 +152,13 @@ export function useGithubData(
 
         if (cancelled) return;
 
-        // Enrich PRs with CI status and reviews in parallel
+        // Enrich PRs with CI status and reviews, updating each PR as it completes
         const authUser = authUserRef.current;
-        const enriched = await Promise.allSettled(
+        await Promise.allSettled(
           allPRs.map(async (pr) => {
+            if (cancelled) return;
             // Only fetch CI/reviews for open PRs (closed/merged don't need it)
-            if (pr.state !== 'open') return pr;
+            if (pr.state !== 'open') return;
 
             const [ciResult, reviewResult, requestedResult] = await Promise.allSettled([
               getCheckStatus(
@@ -151,7 +173,9 @@ export function useGithubData(
                 : Promise.resolve(false),
             ]);
 
-            return {
+            if (cancelled) return;
+
+            const enriched: DashboardItem = {
               ...pr,
               ciStatus:
                 ciResult.status === 'fulfilled'
@@ -166,20 +190,14 @@ export function useGithubData(
                   ? requestedResult.value
                   : false,
             };
+
+            setItems((prev) => replaceItem(prev, enriched));
           })
         );
 
-        if (cancelled) return;
-
-        const finalPRs: DashboardItem[] = enriched
-          .filter(
-            (r): r is PromiseFulfilledResult<PRItem> =>
-              r.status === 'fulfilled'
-          )
-          .map((r) => r.value);
-
-        setItems([...finalPRs, ...allIssues]);
-        setLastRefresh(new Date());
+        if (!cancelled) {
+          setLastRefresh(new Date());
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : 'Unknown error');
