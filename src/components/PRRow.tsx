@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import type { DashboardItem } from '../types.js';
 import { CIBadge } from './CIBadge.js';
 import { ReviewBadge } from './ReviewBadge.js';
@@ -17,13 +17,6 @@ export interface PRRowProps {
 }
 
 export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHideRepo }: PRRowProps) {
-  const ref = useRef<HTMLTableRowElement>(null);
-
-  useEffect(() => {
-    if (selected && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest' });
-    }
-  }, [selected]);
 
   const handleClick = () => {
     onOpen(item);
@@ -40,7 +33,6 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
 
   return (
     <tr
-      ref={ref}
       className={`pr-row ${selected ? 'pr-row-selected' : ''} ${mergeReady ? 'pr-row-merge-ready' : ''} ${stale ? 'pr-row-stale' : ''}`}
       onClick={handleClick}
     >
