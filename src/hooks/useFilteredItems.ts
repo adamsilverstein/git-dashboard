@@ -3,7 +3,7 @@ import type { DashboardItem, FilterMode, SortMode, SortDirection, ItemTypeFilter
 import { filterByPRState } from '../utils/prStateFilter.js';
 import { STORAGE_KEYS } from '../constants.js';
 
-const FILTER_CYCLE: FilterMode[] = ['all', 'failing', 'needs-review', 'new-activity'];
+const FILTER_CYCLE: FilterMode[] = ['all', 'failing', 'needs-review', 'review-requested', 'new-activity'];
 const SORT_CYCLE: SortMode[] = ['updated', 'created', 'repo', 'status', 'number', 'state', 'title', 'author', 'reviews'];
 const ITEM_TYPE_CYCLE: ItemTypeFilter[] = ['both', 'prs', 'issues'];
 
@@ -80,6 +80,10 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen }
         (item) =>
           item.kind === 'pr' &&
           (item.reviewState.changesRequested > 0 || item.reviewState.commentCount > 0)
+      );
+    } else if (filter === 'review-requested') {
+      result = result.filter(
+        (item) => item.kind === 'pr' && item.isRequestedReviewer
       );
     } else if (filter === 'new-activity') {
       result = result.filter((pr) => isUnseen(pr));
