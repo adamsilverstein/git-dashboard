@@ -14,7 +14,7 @@ export async function fetchUserIssues(
   const since = new Date(Date.now() - THIRTY_DAYS_MS).toISOString().split('T')[0];
 
   const repoFilters = repos.map((r) => `repo:${r.owner}/${r.name}`).join(' ');
-  const query = `is:issue involves:${username} updated:>=${since} ${repoFilters}`;
+  const query = `is:issue is:open involves:${username} updated:>=${since} ${repoFilters}`;
 
   const allItems: IssueItem[] = [];
   let page = 1;
