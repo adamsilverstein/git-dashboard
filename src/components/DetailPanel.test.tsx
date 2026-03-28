@@ -41,6 +41,7 @@ const makeDetail = (overrides: Partial<PRDetail> = {}): PRDetail => ({
   changedFiles: 3,
   headBranch: 'feature',
   baseBranch: 'main',
+  timeline: [],
   ...overrides,
 });
 
