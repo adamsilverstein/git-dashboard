@@ -12,22 +12,22 @@ function loadSettings(): ColumnSettings {
     const raw = localStorage.getItem(STORAGE_KEYS.COLUMN_SETTINGS);
     if (raw) {
       const parsed = JSON.parse(raw) as ColumnSettings;
-      // Validate: ensure all default columns are represented in order
       const allIds = new Set(DEFAULT_COLUMN_ORDER);
       const validOrder = parsed.columnOrder.filter((id) => allIds.has(id));
-      // Add any new columns that weren't in saved settings
       for (const id of DEFAULT_COLUMN_ORDER) {
         if (!validOrder.includes(id)) validOrder.push(id);
       }
       const validVisible = parsed.visibleColumns.filter((id) => allIds.has(id));
-      return { columnOrder: validOrder, visibleColumns: validVisible };
+      return { columnOrder: validOrder, visibleColumns: validVisible.length > 0 ? validVisible : [...DEFAULT_VISIBLE] };
     }
-  } catch { /* ignore */ }
+  } catch { /* ignore corrupt data */ }
   return { columnOrder: [...DEFAULT_COLUMN_ORDER], visibleColumns: [...DEFAULT_VISIBLE] };
 }
 
 function saveSettings(settings: ColumnSettings) {
-  localStorage.setItem(STORAGE_KEYS.COLUMN_SETTINGS, JSON.stringify(settings));
+  try {
+    localStorage.setItem(STORAGE_KEYS.COLUMN_SETTINGS, JSON.stringify(settings));
+  } catch { /* quota exceeded or unavailable — state still works in-memory */ }
 }
 
 export function useColumnSettings() {
@@ -35,6 +35,10 @@ export function useColumnSettings() {
 
   const toggleColumn = useCallback((id: string) => {
     setSettings((prev) => {
+      // Prevent hiding the last visible column
+      if (prev.visibleColumns.length === 1 && prev.visibleColumns.includes(id)) {
+        return prev;
+      }
       const visible = prev.visibleColumns.includes(id)
         ? prev.visibleColumns.filter((c) => c !== id)
         : [...prev.visibleColumns, id];
@@ -46,6 +50,7 @@ export function useColumnSettings() {
 
   const reorderColumns = useCallback((fromIndex: number, toIndex: number) => {
     setSettings((prev) => {
+      if (fromIndex === toIndex) return prev;
       const order = [...prev.columnOrder];
       const [moved] = order.splice(fromIndex, 1);
       order.splice(toIndex, 0, moved);

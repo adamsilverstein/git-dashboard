@@ -50,12 +50,14 @@ export function ColumnSettingsDropdown({
         </svg>
       </button>
       {open && (
-        <div className="col-settings-dropdown">
+        <div className="col-settings-dropdown" role="listbox" aria-label="Column visibility and order">
           <div className="col-settings-header">Columns</div>
           {orderedColumns.map((col, index) => (
             <div
               key={col.id}
               className={`col-settings-item ${dragOverIndex === index ? 'col-settings-drag-over' : ''}`}
+              role="option"
+              aria-selected={visibleColumns.includes(col.id)}
               draggable
               onDragStart={() => setDragIndex(index)}
               onDragOver={(e) => {
@@ -75,12 +77,32 @@ export function ColumnSettingsDropdown({
                 setDragOverIndex(null);
               }}
             >
-              <span className="col-settings-drag-handle" title="Drag to reorder">⠿</span>
+              <div className="col-settings-reorder">
+                <button
+                  className="col-settings-move-btn"
+                  onClick={() => onReorderColumns(index, index - 1)}
+                  disabled={index === 0}
+                  aria-label={`Move ${col.label} up`}
+                  title="Move up"
+                >
+                  ▲
+                </button>
+                <button
+                  className="col-settings-move-btn"
+                  onClick={() => onReorderColumns(index, index + 1)}
+                  disabled={index === orderedColumns.length - 1}
+                  aria-label={`Move ${col.label} down`}
+                  title="Move down"
+                >
+                  ▼
+                </button>
+              </div>
               <label className="col-settings-label">
                 <input
                   type="checkbox"
                   checked={visibleColumns.includes(col.id)}
                   onChange={() => onToggleColumn(col.id)}
+                  disabled={visibleColumns.length === 1 && visibleColumns.includes(col.id)}
                 />
                 {col.label}
               </label>

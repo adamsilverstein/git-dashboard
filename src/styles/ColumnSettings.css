@@ -65,12 +65,31 @@
   border-top: 2px solid var(--accent);
 }
 
-.col-settings-drag-handle {
+.col-settings-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.col-settings-move-btn {
+  background: none;
+  border: none;
   color: var(--text-subtle);
-  font-size: 14px;
-  cursor: grab;
-  user-select: none;
+  cursor: pointer;
+  font-size: 8px;
   line-height: 1;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.col-settings-move-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.col-settings-move-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
 
 .col-settings-label {
