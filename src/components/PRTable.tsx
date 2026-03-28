@@ -1,8 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { DashboardItem, SortMode, SortDirection } from '../types.js';
+import { DEFAULT_COLUMNS } from '../columns.js';
 import { PRRow } from './PRRow.js';
 import { SortableHeader } from './SortableHeader.js';
+import { ColumnSettingsDropdown } from './ColumnSettingsDropdown.js';
 import { isStale } from '../utils/staleness.js';
 
 const ROW_HEIGHT_ESTIMATE = 37;
@@ -18,9 +20,14 @@ interface PRTableProps {
   onOpen: (item: DashboardItem) => void;
   onHideRepo?: (owner: string, name: string) => void;
   staleDays: number;
+  visibleColumns: string[];
+  columnOrder: string[];
+  onToggleColumn: (id: string) => void;
+  onReorderColumns: (fromIndex: number, toIndex: number) => void;
+  onResetColumns: () => void;
 }
 
-export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPreview, isUnseen, onOpen, onHideRepo, staleDays }: PRTableProps) {
+export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPreview, isUnseen, onOpen, onHideRepo, staleDays, visibleColumns, columnOrder, onToggleColumn, onReorderColumns, onResetColumns }: PRTableProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -36,6 +43,13 @@ export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPre
       virtualizer.scrollToIndex(cursorIndex, { align: 'auto' });
     }
   }, [cursorIndex, virtualizer, items.length]);
+
+  const colMap = useMemo(() => new Map(DEFAULT_COLUMNS.map((c) => [c.id, c])), []);
+
+  const orderedVisibleColumns = useMemo(
+    () => columnOrder.filter((id) => visibleColumns.includes(id)).map((id) => colMap.get(id)!).filter(Boolean),
+    [columnOrder, visibleColumns, colMap]
+  );
 
   if (items.length === 0) {
     return (
@@ -55,31 +69,38 @@ export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPre
   const virtualRows = virtualizer.getVirtualItems();
   const totalHeight = virtualizer.getTotalSize();
 
-  // Spacer heights for rows above and below the visible window
   const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
   const paddingBottom = virtualRows.length > 0 ? totalHeight - virtualRows[virtualRows.length - 1].end : 0;
+
+  // +1 for the settings column
+  const colSpan = orderedVisibleColumns.length + 1;
 
   return (
     <div className="table-container" ref={scrollContainerRef}>
       <table className="pr-table" aria-label="Pull requests and issues">
         <thead>
           <tr>
-            <th className="col-type" scope="col">Type</th>
-            <SortableHeader label="CI" sortKey="status" className="col-ci" {...headerProps} />
-            <SortableHeader label="Repo" sortKey="repo" className="col-repo" {...headerProps} />
-            <SortableHeader label="#" sortKey="number" className="col-number" {...headerProps} />
-            <SortableHeader label="State" sortKey="state" className="col-state" {...headerProps} />
-            <SortableHeader label="Title" sortKey="title" className="col-title" {...headerProps} />
-            <SortableHeader label="Author" sortKey="author" className="col-author" {...headerProps} />
-            <SortableHeader label="Assignees" sortKey="assignees" className="col-assignees" {...headerProps} />
-            <SortableHeader label="Updated" sortKey="updated" className="col-updated" {...headerProps} />
-            <SortableHeader label="Reviews" sortKey="reviews" className="col-reviews" {...headerProps} />
-            <th className="col-link" scope="col">Link</th>
+            {orderedVisibleColumns.map((col) =>
+              col.sortKey ? (
+                <SortableHeader key={col.id} label={col.label} sortKey={col.sortKey} className={col.className} {...headerProps} />
+              ) : (
+                <th key={col.id} className={col.className} scope="col">{col.label}</th>
+              )
+            )}
+            <th className="col-settings" scope="col">
+              <ColumnSettingsDropdown
+                visibleColumns={visibleColumns}
+                columnOrder={columnOrder}
+                onToggleColumn={onToggleColumn}
+                onReorderColumns={onReorderColumns}
+                onReset={onResetColumns}
+              />
+            </th>
           </tr>
         </thead>
         <tbody>
           {paddingTop > 0 && (
-            <tr><td style={{ height: paddingTop, padding: 0, border: 'none' }} colSpan={10} /></tr>
+            <tr><td style={{ height: paddingTop, padding: 0, border: 'none' }} colSpan={colSpan} /></tr>
           )}
           {virtualRows.map((virtualRow) => {
             const item = items[virtualRow.index];
@@ -93,11 +114,12 @@ export function PRTable({ items, cursorIndex, sort, sortDirection, onSort, onPre
                 onPreview={onPreview}
                 onOpen={onOpen}
                 onHideRepo={onHideRepo}
+                visibleColumns={orderedVisibleColumns.map((c) => c.id)}
               />
             );
           })}
           {paddingBottom > 0 && (
-            <tr><td style={{ height: paddingBottom, padding: 0, border: 'none' }} colSpan={10} /></tr>
+            <tr><td style={{ height: paddingBottom, padding: 0, border: 'none' }} colSpan={colSpan} /></tr>
           )}
         </tbody>
       </table>

@@ -14,9 +14,10 @@ export interface PRRowProps {
   onPreview: (item: DashboardItem) => void;
   onOpen: (item: DashboardItem) => void;
   onHideRepo?: (owner: string, name: string) => void;
+  visibleColumns: string[];
 }
 
-export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHideRepo }: PRRowProps) {
+export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHideRepo, visibleColumns }: PRRowProps) {
 
   const handleClick = () => {
     onOpen(item);
@@ -31,20 +32,21 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
     onHideRepo?.(item.repo.owner, item.repo.name);
   };
 
-  return (
-    <tr
-      className={`pr-row ${selected ? 'pr-row-selected' : ''} ${mergeReady ? 'pr-row-merge-ready' : ''} ${stale ? 'pr-row-stale' : ''}`}
-      onClick={handleClick}
-    >
-      <td className="col-type">
+  const columnRenderers: Record<string, () => React.ReactNode> = {
+    type: () => (
+      <td key="type" className="col-type">
         <span className={`type-badge type-${item.kind}`}>
           {isPR ? 'PR' : 'Issue'}
         </span>
       </td>
-      <td className="col-ci">
+    ),
+    ci: () => (
+      <td key="ci" className="col-ci">
         {isPR ? <CIBadge status={item.ciStatus} /> : <span className="ci-badge ci-none"><span className="ci-dot" /></span>}
       </td>
-      <td className="col-repo">
+    ),
+    repo: () => (
+      <td key="repo" className="col-repo">
         {unseen && <span className="unseen-dot" title="New activity" />}
         <span className="repo-name-cell">
           {item.repo.owner}/{item.repo.name}
@@ -60,8 +62,12 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
           )}
         </span>
       </td>
-      <td className="col-number">#{item.number}</td>
-      <td className="col-state">
+    ),
+    number: () => (
+      <td key="number" className="col-number">#{item.number}</td>
+    ),
+    state: () => (
+      <td key="state" className="col-state">
         {isPR ? (
           <span className={`state-badge state-${item.state}`}>
             {item.state === 'merged' ? 'merged' : item.state === 'closed' ? 'closed' : item.draft ? 'draft' : 'open'}
@@ -72,7 +78,9 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
           </span>
         )}
       </td>
-      <td className="col-title">
+    ),
+    title: () => (
+      <td key="title" className="col-title">
         <span className="title-text">{item.title}</span>
         {mergeReady && (
           <span className="merge-ready-badge" role="img" aria-label="Ready to merge" title="Approved & CI passing — ready to merge">🚀</span>
@@ -85,24 +93,34 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
           </span>
         )}
       </td>
-      <td className="col-author">@{item.author}</td>
-      <td className="col-assignees">
+    ),
+    author: () => (
+      <td key="author" className="col-author">@{item.author}</td>
+    ),
+    assignees: () => (
+      <td key="assignees" className="col-assignees">
         {item.assignees.length > 0
           ? item.assignees.map((a) => `@${a}`).join(', ')
           : <span className="text-muted">&mdash;</span>}
       </td>
-      <td className="col-updated">
+    ),
+    updated: () => (
+      <td key="updated" className="col-updated">
         {stale && <span className="stale-badge" role="img" aria-label="Stale">🕸️</span>}
         {timeAgo(item.updatedAt)}
       </td>
-      <td className="col-reviews">
+    ),
+    reviews: () => (
+      <td key="reviews" className="col-reviews">
         {isPR ? (
           <ReviewBadge state={item.reviewState} isRequestedReviewer={item.isRequestedReviewer} />
         ) : (
           item.milestone && <span className="milestone-badge">🏁 {item.milestone}</span>
         )}
       </td>
-      <td className="col-link">
+    ),
+    link: () => (
+      <td key="link" className="col-link">
         <a
           href={item.url}
           target="_blank"
@@ -114,6 +132,17 @@ export function PRRow({ item, selected, unseen, stale, onPreview, onOpen, onHide
           🔗
         </a>
       </td>
+    ),
+  };
+
+  return (
+    <tr
+      className={`pr-row ${selected ? 'pr-row-selected' : ''} ${mergeReady ? 'pr-row-merge-ready' : ''} ${stale ? 'pr-row-stale' : ''}`}
+      onClick={handleClick}
+    >
+      {visibleColumns.map((id) => columnRenderers[id]?.())}
+      {/* Empty cell for settings column */}
+      <td className="col-settings-spacer" />
     </tr>
   );
 }

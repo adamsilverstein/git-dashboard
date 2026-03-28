@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PRRow } from '../components/PRRow.js';
 import type { PRItem } from '../types.js';
+import { DEFAULT_COLUMN_ORDER } from '../columns.js';
 
 function makePR(overrides: Partial<PRItem> = {}): PRItem {
   return {
@@ -32,7 +33,7 @@ function renderRow(item: PRItem, selected = false) {
     ...render(
       <table>
         <tbody>
-          <PRRow item={item} selected={selected} unseen={false} stale={false} onPreview={onPreview} onOpen={onOpen} />
+          <PRRow item={item} selected={selected} unseen={false} stale={false} onPreview={onPreview} onOpen={onOpen} visibleColumns={DEFAULT_COLUMN_ORDER} />
         </tbody>
       </table>,
     ),

@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PRRow } from '../components/PRRow.js';
 import type { IssueItem, PRItem, DashboardItem } from '../types.js';
+import { DEFAULT_COLUMN_ORDER } from '../columns.js';
 
 function makePR(overrides: Partial<PRItem> = {}): PRItem {
   return {
@@ -50,7 +51,7 @@ function renderRow(item: DashboardItem, selected = false) {
   return render(
     <table>
       <tbody>
-        <PRRow item={item} selected={selected} unseen={false} stale={false} onPreview={noop} onOpen={noop} />
+        <PRRow item={item} selected={selected} unseen={false} stale={false} onPreview={noop} onOpen={noop} visibleColumns={DEFAULT_COLUMN_ORDER} />
       </tbody>
     </table>,
   );
@@ -97,7 +98,7 @@ describe('DashboardItem type discrimination', () => {
     const { container } = render(
       <table>
         <tbody>
-          <PRRow item={makePR()} selected={false} unseen={false} stale={false} onPreview={noop} onOpen={noop} />
+          <PRRow item={makePR()} selected={false} unseen={false} stale={false} onPreview={noop} onOpen={noop} visibleColumns={DEFAULT_COLUMN_ORDER} />
         </tbody>
       </table>,
     );
@@ -111,7 +112,7 @@ describe('DashboardItem type discrimination', () => {
     const { container } = render(
       <table>
         <tbody>
-          <PRRow item={issue} selected={false} unseen={false} stale={false} onPreview={onPreview} onOpen={onOpen} />
+          <PRRow item={issue} selected={false} unseen={false} stale={false} onPreview={onPreview} onOpen={onOpen} visibleColumns={DEFAULT_COLUMN_ORDER} />
         </tbody>
       </table>,
     );

@@ -10,6 +10,7 @@ import { useAutoRefresh } from './hooks/useAutoRefresh.js';
 import { useLastSeen } from './hooks/useLastSeen.js';
 import { useFilteredItems } from './hooks/useFilteredItems.js';
 import { useModalState } from './hooks/useModalState.js';
+import { useColumnSettings } from './hooks/useColumnSettings.js';
 import { Header } from './components/Header.js';
 import { FilterBar } from './components/FilterBar.js';
 import { PRTable } from './components/PRTable.js';
@@ -31,6 +32,7 @@ export function App() {
   const [rateLimit, setRateLimit] = useState<RateLimit | null>(null);
 
   const { markSeen, isUnseen } = useLastSeen();
+  const { visibleColumns, columnOrder, toggleColumn, reorderColumns, resetColumns } = useColumnSettings();
 
   const {
     viewMode, setViewMode, previewItem, isModalOpen,
@@ -203,6 +205,11 @@ export function App() {
         onOpen={markSeen}
         onHideRepo={toggleRepoByName}
         staleDays={config.defaults.staleDays}
+        visibleColumns={visibleColumns}
+        columnOrder={columnOrder}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetColumns={resetColumns}
       />
       <StatusBar error={error} failedRepos={failedRepos} searchQuery={searchQuery} matchCount={filtered.length} totalCount={items.length} />
 
