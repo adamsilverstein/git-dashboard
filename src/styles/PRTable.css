@@ -163,6 +163,13 @@
   text-align: center;
 }
 
+.col-settings,
+.col-settings-spacer {
+  width: 30px;
+  text-align: center;
+  padding: 0 4px;
+}
+
 /* ── State Badges ──────────────────────────────────────────── */
 .state-badge {
   display: inline-block;

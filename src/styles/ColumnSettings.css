@@ -1,0 +1,124 @@
+/* ── Column Settings ──────────────────────────────────────── */
+.col-settings-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.col-settings-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.col-settings-btn:hover {
+  color: var(--text);
+}
+
+.col-settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 200px;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.col-settings-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.col-settings-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  transition: background 0.1s;
+}
+
+.col-settings-item:last-of-type {
+  border-bottom: none;
+}
+
+.col-settings-item:hover {
+  background: var(--bg-hover);
+}
+
+.col-settings-drag-over {
+  border-top: 2px solid var(--accent);
+}
+
+.col-settings-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.col-settings-move-btn {
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-size: 8px;
+  line-height: 1;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.col-settings-move-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.col-settings-move-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.col-settings-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+}
+
+.col-settings-label input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.col-settings-reset {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.col-settings-reset:hover {
+  background: var(--bg-hover);
+}
