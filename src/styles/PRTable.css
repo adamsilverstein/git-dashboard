@@ -324,7 +324,8 @@
 }
 
 .repo-hide-btn {
-  display: none;
+  visibility: hidden;
+  display: inline-flex;
   background: none;
   border: 1px solid var(--border);
   color: var(--text-subtle);
@@ -338,7 +339,7 @@
 
 .pr-row:hover .repo-hide-btn,
 .pr-row:focus-within .repo-hide-btn {
-  display: inline-flex;
+  visibility: visible;
 }
 
 .repo-hide-btn:focus-visible {
