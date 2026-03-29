@@ -185,7 +185,7 @@
   font-size: 13px;
   width: 200px;
   outline: none;
-  transition: border-color 0.15s, width 0.2s;
+  transition: border-color 0.15s;
   margin-left: auto;
 }
 
@@ -195,7 +195,6 @@
 
 .search-input:focus {
   border-color: var(--accent);
-  width: 280px;
 }
 
 /* ── Label Filter ──────────────────────────────────────────── */
