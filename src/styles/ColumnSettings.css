@@ -80,6 +80,14 @@
   color: var(--text-muted);
 }
 
+.col-settings-item:active .col-settings-drag-handle {
+  cursor: grabbing;
+}
+
+.col-settings-item:active {
+  cursor: grabbing;
+}
+
 .col-settings-reorder {
   display: flex;
   flex-direction: column;
