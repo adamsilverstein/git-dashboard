@@ -49,7 +49,6 @@ export function Header({
         )}
       </div>
       <div className="header-right">
-        {loading && <span className="spinner" />}
         {lastRefresh && !loading && (
           <span className="last-refresh">
             {lastRefresh.toLocaleTimeString()}
