@@ -14,8 +14,19 @@ export async function getCheckStatus(
       ref,
       per_page: 100,
     });
-    const runs = data.check_runs;
-    if (runs.length === 0) return 'none';
+    const allRuns = data.check_runs;
+    if (allRuns.length === 0) return 'none';
+
+    // Keep only the latest run per check name (reruns create duplicate entries)
+    const latestByName = new Map<string, (typeof allRuns)[number]>();
+    for (const run of allRuns) {
+      const existing = latestByName.get(run.name);
+      if (!existing || new Date(run.started_at ?? 0) > new Date(existing.started_at ?? 0)) {
+        latestByName.set(run.name, run);
+      }
+    }
+    const runs = [...latestByName.values()];
+
     const failConclusions = new Set(['failure', 'timed_out', 'cancelled', 'action_required']);
     if (runs.some((r) => r.conclusion && failConclusions.has(r.conclusion)))
       return 'failure';
