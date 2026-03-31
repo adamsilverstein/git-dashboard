@@ -142,18 +142,20 @@ function parseTimelineEvents(events: any[]): TimelineEvent[] {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// Keep only the latest run per check name (reruns create duplicate entries)
-function deduplicateCheckRuns<T extends { name: string; started_at?: string | null }>(
+// Keep only the latest run per app+name (reruns create duplicate entries;
+// different apps can emit checks with the same name)
+function deduplicateCheckRuns<T extends { name: string; started_at?: string | null; app?: { id?: number | null } | null }>(
   runs: T[]
 ): T[] {
-  const latestByName = new Map<string, T>();
+  const latestByKey = new Map<string, T>();
   for (const run of runs) {
-    const existing = latestByName.get(run.name);
+    const key = `${run.app?.id ?? 'unknown'}:${run.name}`;
+    const existing = latestByKey.get(key);
     if (!existing || new Date(run.started_at ?? 0) > new Date(existing.started_at ?? 0)) {
-      latestByName.set(run.name, run);
+      latestByKey.set(key, run);
     }
   }
-  return [...latestByName.values()];
+  return [...latestByKey.values()];
 }
 
 export async function getPRDetails(

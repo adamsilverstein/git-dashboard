@@ -168,14 +168,14 @@ describe('getCheckStatus', () => {
     expect(await getCheckStatus(octokit, 'o', 'r', 'ref')).toBe('mixed');
   });
 
-  it('deduplicates check runs by name, keeping only the latest', async () => {
+  it('deduplicates check runs by app+name, keeping only the latest', async () => {
     const octokit = mockOctokit({
       checks: {
         listForRef: vi.fn().mockResolvedValue({
           data: {
             check_runs: [
-              { name: 'test', status: 'completed', conclusion: 'failure', started_at: '2024-01-01T00:00:00Z' },
-              { name: 'test', status: 'completed', conclusion: 'success', started_at: '2024-01-01T01:00:00Z' },
+              { name: 'test', app: { id: 1 }, status: 'completed', conclusion: 'failure', started_at: '2024-01-01T00:00:00Z' },
+              { name: 'test', app: { id: 1 }, status: 'completed', conclusion: 'success', started_at: '2024-01-01T01:00:00Z' },
             ],
           },
         }),
@@ -190,15 +190,31 @@ describe('getCheckStatus', () => {
         listForRef: vi.fn().mockResolvedValue({
           data: {
             check_runs: [
-              { name: 'ci/build', status: 'completed', conclusion: 'failure', started_at: '2024-01-01T00:00:00Z' },
-              { name: 'ci/build', status: 'completed', conclusion: 'success', started_at: '2024-01-01T02:00:00Z' },
-              { name: 'ci/lint', status: 'completed', conclusion: 'success', started_at: '2024-01-01T00:00:00Z' },
+              { name: 'ci/build', app: { id: 1 }, status: 'completed', conclusion: 'failure', started_at: '2024-01-01T00:00:00Z' },
+              { name: 'ci/build', app: { id: 1 }, status: 'completed', conclusion: 'success', started_at: '2024-01-01T02:00:00Z' },
+              { name: 'ci/lint', app: { id: 1 }, status: 'completed', conclusion: 'success', started_at: '2024-01-01T00:00:00Z' },
             ],
           },
         }),
       },
     });
     expect(await getCheckStatus(octokit, 'o', 'r', 'ref')).toBe('success');
+  });
+
+  it('keeps same-named checks from different apps separate', async () => {
+    const octokit = mockOctokit({
+      checks: {
+        listForRef: vi.fn().mockResolvedValue({
+          data: {
+            check_runs: [
+              { name: 'test', app: { id: 1 }, status: 'completed', conclusion: 'success', started_at: '2024-01-01T00:00:00Z' },
+              { name: 'test', app: { id: 2 }, status: 'completed', conclusion: 'failure', started_at: '2024-01-01T00:00:00Z' },
+            ],
+          },
+        }),
+      },
+    });
+    expect(await getCheckStatus(octokit, 'o', 'r', 'ref')).toBe('failure');
   });
 
   it('returns "none" when the API call throws', async () => {
