@@ -13,9 +13,20 @@
   gap: 12px;
 }
 
+.header-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
 .header-title {
   font-size: 20px;
   font-weight: 600;
+  line-height: 1.2;
+}
+
+.header-version {
+  color: var(--text-subtle);
+  font-size: 11px;
 }
 
 .header-stats {
