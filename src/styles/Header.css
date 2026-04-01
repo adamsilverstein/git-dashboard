@@ -18,6 +18,11 @@
   font-weight: 600;
 }
 
+.header-version {
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+
 .header-stats {
   color: var(--text-muted);
   font-size: 13px;

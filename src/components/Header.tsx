@@ -1,5 +1,6 @@
 import React from 'react';
 import type { RateLimit } from '../github/client.js';
+import { version } from '../../package.json';
 
 interface HeaderProps {
   loading: boolean;
@@ -38,6 +39,7 @@ export function Header({
     <header className="header">
       <div className="header-left">
         <h1 className="header-title">Git Dashboard</h1>
+        <span className="header-version">v{version}</span>
         <span className="header-stats">
           {repoCount} repo{repoCount !== 1 ? 's' : ''} &middot; {itemCount} item
           {itemCount !== 1 ? 's' : ''}
