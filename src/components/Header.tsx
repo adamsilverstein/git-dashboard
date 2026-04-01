@@ -38,8 +38,10 @@ export function Header({
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="header-title">Git Dashboard</h1>
-        <span className="header-version">v{version}</span>
+        <div className="header-title-block">
+          <h1 className="header-title">Git Dashboard</h1>
+          <span className="header-version">v{version}</span>
+        </div>
         <span className="header-stats">
           {repoCount} repo{repoCount !== 1 ? 's' : ''} &middot; {itemCount} item
           {itemCount !== 1 ? 's' : ''}
