@@ -161,9 +161,23 @@ export function useGithubData(
             }
           });
 
-          const prResults = await Promise.all(prPromises);
-          await Promise.all(issuePromises);
-          allPRs = prResults.flat();
+          // Use allSettled to avoid unhandled rejections when a 401 re-throw
+          // causes one group to reject before the other is awaited.
+          const [prSettled, issueSettled] = await Promise.all([
+            Promise.allSettled(prPromises),
+            Promise.allSettled(issuePromises),
+          ]);
+
+          // Check for auth errors first
+          for (const r of [...prSettled, ...issueSettled]) {
+            if (r.status === 'rejected' && isAuthError(r.reason)) {
+              throw r.reason;
+            }
+          }
+
+          allPRs = prSettled
+            .filter((r): r is PromiseFulfilledResult<PRItem[]> => r.status === 'fulfilled')
+            .flatMap((r) => r.value);
 
           if (!cancelled) {
             setFailedRepos(repoErrors);

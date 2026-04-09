@@ -57,6 +57,7 @@ export function App() {
         console.warn('Failed to fetch user:', e);
         if (e && typeof e === 'object' && 'status' in e && e.status === 401) {
           setTokenExpired(true);
+          setUsername(null);
           clearToken();
           setTokenState(null);
         }
@@ -78,6 +79,7 @@ export function App() {
   useEffect(() => {
     if (authError) {
       setTokenExpired(true);
+      setUsername(null);
       clearToken();
       setTokenState(null);
     }

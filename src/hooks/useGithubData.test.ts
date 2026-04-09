@@ -272,12 +272,15 @@ describe('useGithubData', () => {
       useGithubData(mockOctokit(), repos, 30, 'user'),
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
+    try {
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
 
-    expect(result.current.authError).toBe(true);
-    warnSpy.mockRestore();
+      expect(result.current.authError).toBe(true);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('sets authError when API returns 401 (per-repo fetch path)', async () => {

@@ -46,13 +46,7 @@
   margin-bottom: 4px;
 }
 
-.token-steps code {
-  background: var(--bg);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
+.token-steps code,
 .token-hint code {
   background: var(--bg);
   padding: 1px 5px;
