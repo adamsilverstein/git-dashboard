@@ -19,9 +19,9 @@ export function PRListScreen({ navigation }: Props) {
   const { octokit, username, rateLimit } = useApp();
   const { config, enabledRepos } = useConfigContext();
   const { markSeen, isUnseen } = useLastSeen(asyncStorageAdapter);
-  const ownershipFilter: OwnershipFilter = 'created';
+  const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('created');
 
-  const { items, loading, error, lastRefresh, refresh } = useGithubData(
+  const { items, loading, error, failedRepos, lastRefresh, refresh } = useGithubData(
     octokit,
     enabledRepos,
     config.defaults.maxPrsPerRepo,
@@ -31,9 +31,12 @@ export function PRListScreen({ navigation }: Props) {
   );
 
   const {
-    filtered, filter, sort,
+    filtered, filter, sort, sortDirection,
     handleSetFilter, handleSetSort,
     searchQuery, setSearchQuery,
+    itemTypeFilter, setItemTypeFilter,
+    prStateFilters, togglePRStateFilter,
+    labelFilters, toggleLabelFilter, clearLabelFilters, availableLabels,
   } = useFilteredItems({
     items,
     defaultFilter: config.defaults.filter,
@@ -43,7 +46,7 @@ export function PRListScreen({ navigation }: Props) {
     storage: asyncStorageAdapter,
   });
 
-  const { reset: resetAutoRefresh } = useAutoRefresh({
+  const { secondsLeft, reset: resetAutoRefresh } = useAutoRefresh({
     intervalSeconds: config.defaults.autoRefreshInterval,
     paused: false,
     onRefresh: refresh,
@@ -83,10 +86,19 @@ export function PRListScreen({ navigation }: Props) {
     const parts: string[] = [];
     if (enabledRepos.length > 0) parts.push(`${enabledRepos.length} repos`);
     parts.push(`${filtered.length} items`);
-    if (filter !== 'all') parts.push(`filter: ${filter}`);
-    if (rateLimit) parts.push(`API: ${rateLimit.remaining}/${rateLimit.limit}`);
-    return parts.join(' · ');
-  }, [enabledRepos.length, filtered.length, filter, rateLimit]);
+    if (filter !== 'all') parts.push(filter);
+    if (lastRefresh) {
+      const ago = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
+      parts.push(ago < 1 ? 'just now' : `${ago}m ago`);
+    }
+    if (secondsLeft != null) {
+      const m = Math.floor(secondsLeft / 60);
+      const s = secondsLeft % 60;
+      parts.push(`next ${m}:${s.toString().padStart(2, '0')}`);
+    }
+    if (rateLimit) parts.push(`API ${rateLimit.remaining}/${rateLimit.limit}`);
+    return parts.join(' \u00b7 ');
+  }, [enabledRepos.length, filtered.length, filter, lastRefresh, secondsLeft, rateLimit]);
 
   return (
     <View style={styles.container}>
@@ -108,13 +120,29 @@ export function PRListScreen({ navigation }: Props) {
       <FilterBar
         activeFilter={filter}
         activeSort={sort}
+        sortDirection={sortDirection}
         onFilterChange={handleSetFilter}
         onSortChange={handleSetSort}
+        ownershipFilter={ownershipFilter}
+        onOwnershipChange={setOwnershipFilter}
+        username={username}
+        itemTypeFilter={itemTypeFilter}
+        onItemTypeChange={setItemTypeFilter}
+        prStateFilters={prStateFilters}
+        onTogglePRState={togglePRStateFilter}
       />
 
       <Text style={styles.headerInfo}>{headerInfo}</Text>
 
       {error && <Text style={styles.error}>{error}</Text>}
+
+      {failedRepos.length > 0 && (
+        <View style={styles.warningBanner}>
+          <Text style={styles.warningText}>
+            Failed to fetch: {failedRepos.map((r) => r.repo).join(', ')}
+          </Text>
+        </View>
+      )}
 
       {enabledRepos.length === 0 ? (
         <View style={styles.emptyState}>
@@ -186,6 +214,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: '#f8514920',
+  },
+  warningBanner: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#d2992220',
+  },
+  warningText: {
+    color: '#d29922',
+    fontSize: 13,
   },
   emptyState: {
     flex: 1,
