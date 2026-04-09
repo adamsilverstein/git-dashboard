@@ -8,13 +8,12 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { useConfig } from '../../shared/hooks/useConfig.js';
-import { asyncStorageAdapter } from '../storage/asyncStorageAdapter';
 import { useApp } from '../context/AppContext';
+import { useConfigContext } from '../context/ConfigContext';
 
 export function SettingsScreen() {
   const { username, rateLimit, signOut } = useApp();
-  const { config, addRepo, removeRepo, toggleRepo } = useConfig(asyncStorageAdapter);
+  const { config, addRepo, removeRepo, toggleRepo } = useConfigContext();
   const [repoInput, setRepoInput] = useState('');
 
   const handleAddRepo = useCallback(() => {

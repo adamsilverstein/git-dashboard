@@ -4,6 +4,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AppProvider, useApp } from './src/context/AppContext';
+import { ConfigProvider } from './src/context/ConfigContext';
 import { TokenSetupScreen } from './src/screens/TokenSetupScreen';
 import { PRListScreen } from './src/screens/PRListScreen';
 import { PRDetailScreen } from './src/screens/PRDetailScreen';
@@ -101,7 +102,9 @@ function MainApp() {
 export default function App() {
   return (
     <AppProvider>
-      <MainApp />
+      <ConfigProvider>
+        <MainApp />
+      </ConfigProvider>
     </AppProvider>
   );
 }

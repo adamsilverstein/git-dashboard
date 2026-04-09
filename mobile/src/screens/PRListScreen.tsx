@@ -1,14 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, FlatList, Text, TextInput, StyleSheet, RefreshControl, Linking } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { DashboardItem, OwnershipFilter } from '../../shared/types.js';
-import { useGithubData } from '../../shared/hooks/useGithubData.js';
-import { useFilteredItems } from '../../shared/hooks/useFilteredItems.js';
-import { useConfig } from '../../shared/hooks/useConfig.js';
-import { useLastSeen } from '../../shared/hooks/useLastSeen.js';
-import { useAutoRefresh } from '../../shared/hooks/useAutoRefresh.js';
+import type { DashboardItem, OwnershipFilter } from '../../../shared/types.js';
+import { useGithubData } from '../../../shared/hooks/useGithubData.js';
+import { useFilteredItems } from '../../../shared/hooks/useFilteredItems.js';
+import { useLastSeen } from '../../../shared/hooks/useLastSeen.js';
+import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh.js';
 import { asyncStorageAdapter } from '../storage/asyncStorageAdapter';
 import { useApp } from '../context/AppContext';
+import { useConfigContext } from '../context/ConfigContext';
 import { PRListItem } from '../components/PRListItem';
 import { FilterBar } from '../components/FilterBar';
 import type { DashboardStackParamList } from '../navigation/types';
@@ -17,7 +17,7 @@ type Props = NativeStackScreenProps<DashboardStackParamList, 'PRList'>;
 
 export function PRListScreen({ navigation }: Props) {
   const { octokit, username, rateLimit } = useApp();
-  const { config, enabledRepos } = useConfig(asyncStorageAdapter);
+  const { config, enabledRepos } = useConfigContext();
   const { markSeen, isUnseen } = useLastSeen(asyncStorageAdapter);
   const ownershipFilter: OwnershipFilter = 'created';
 
