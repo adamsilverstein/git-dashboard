@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { View, FlatList, Text, StyleSheet, RefreshControl, Linking } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, FlatList, Text, TextInput, StyleSheet, RefreshControl, Linking } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DashboardItem, OwnershipFilter } from '../../shared/types.js';
 import { useGithubData } from '../../shared/hooks/useGithubData.js';
@@ -10,6 +10,7 @@ import { useAutoRefresh } from '../../shared/hooks/useAutoRefresh.js';
 import { asyncStorageAdapter } from '../storage/asyncStorageAdapter';
 import { useApp } from '../context/AppContext';
 import { PRListItem } from '../components/PRListItem';
+import { FilterBar } from '../components/FilterBar';
 import type { DashboardStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<DashboardStackParamList, 'PRList'>;
@@ -30,7 +31,9 @@ export function PRListScreen({ navigation }: Props) {
   );
 
   const {
-    filtered, filter,
+    filtered, filter, sort,
+    handleSetFilter, handleSetSort,
+    searchQuery, setSearchQuery,
   } = useFilteredItems({
     items,
     defaultFilter: config.defaults.filter,
@@ -87,6 +90,28 @@ export function PRListScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {/* Search bar */}
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search PRs..."
+          placeholderTextColor="#484f58"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+      </View>
+
+      {/* Filter & sort chips */}
+      <FilterBar
+        activeFilter={filter}
+        activeSort={sort}
+        onFilterChange={handleSetFilter}
+        onSortChange={handleSetSort}
+      />
+
       <Text style={styles.headerInfo}>{headerInfo}</Text>
 
       {error && <Text style={styles.error}>{error}</Text>}
@@ -130,6 +155,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0d1117',
+  },
+  searchRow: {
+    backgroundColor: '#161b22',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  searchInput: {
+    backgroundColor: '#0d1117',
+    borderWidth: 1,
+    borderColor: '#30363d',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 15,
+    color: '#e6edf3',
   },
   headerInfo: {
     fontSize: 12,
