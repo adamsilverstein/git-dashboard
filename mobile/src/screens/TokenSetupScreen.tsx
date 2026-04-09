@@ -17,6 +17,7 @@ export function TokenSetupScreen() {
   const [input, setInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showToken, setShowToken] = useState(false);
 
   const handleSave = async () => {
     const trimmed = input.trim();
@@ -49,17 +50,25 @@ export function TokenSetupScreen() {
 
         <View style={styles.card}>
           <Text style={styles.label}>GitHub Personal Access Token</Text>
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder="ghp_xxxxxxxxxxxx"
-            placeholderTextColor="#666"
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="off"
-          />
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              placeholder="ghp_xxxxxxxxxxxx"
+              placeholderTextColor="#666"
+              secureTextEntry={!showToken}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="off"
+            />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowToken((prev) => !prev)}
+            >
+              <Text style={styles.toggleText}>{showToken ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
           {error && <Text style={styles.error}>{error}</Text>}
 
           <TouchableOpacity
@@ -127,7 +136,13 @@ const styles = StyleSheet.create({
     color: '#e6edf3',
     marginBottom: 8,
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   input: {
+    flex: 1,
     backgroundColor: '#0d1117',
     borderWidth: 1,
     borderColor: '#30363d',
@@ -135,7 +150,16 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: '#e6edf3',
-    marginBottom: 16,
+  },
+  toggleButton: {
+    marginLeft: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  toggleText: {
+    color: '#58a6ff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   error: {
     color: '#f85149',
