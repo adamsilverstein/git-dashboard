@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { ConfigProvider } from './src/context/ConfigContext';
+import { BadgeProvider, useBadge } from './src/context/BadgeContext';
 import { TokenSetupScreen } from './src/screens/TokenSetupScreen';
 import { PRListScreen } from './src/screens/PRListScreen';
 import { PRDetailScreen } from './src/screens/PRDetailScreen';
@@ -51,6 +52,7 @@ function DashboardNavigator() {
 
 function MainApp() {
   const { token, loading } = useApp();
+  const { unseenCount } = useBadge();
 
   if (loading) {
     return (
@@ -83,6 +85,8 @@ function MainApp() {
           component={DashboardNavigator}
           options={{
             tabBarLabel: 'PRs',
+            tabBarBadge: unseenCount > 0 ? unseenCount : undefined,
+            tabBarBadgeStyle: { backgroundColor: '#58a6ff', fontSize: 10 },
           }}
         />
         <Tab.Screen
@@ -103,7 +107,9 @@ export default function App() {
   return (
     <AppProvider>
       <ConfigProvider>
-        <MainApp />
+        <BadgeProvider>
+          <MainApp />
+        </BadgeProvider>
       </ConfigProvider>
     </AppProvider>
   );

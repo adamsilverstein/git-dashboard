@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import type { FilterMode, SortMode, SortDirection, OwnershipFilter, ItemTypeFilter, PRStateFilterKey } from '../../../shared/types.js';
+import type { FilterMode, SortMode, SortDirection, OwnershipFilter, ItemTypeFilter, PRStateFilterKey, RepoConfig } from '../../../shared/types.js';
 
 const FILTERS: { key: FilterMode; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -59,6 +59,9 @@ interface FilterBarProps {
   // Labels
   labelFilterCount: number;
   onLabelFilterPress: () => void;
+  // Hidden repos
+  hiddenRepos: RepoConfig[];
+  onRestoreRepo: (owner: string, name: string) => void;
 }
 
 export function FilterBar({
@@ -68,6 +71,7 @@ export function FilterBar({
   itemTypeFilter, onItemTypeChange,
   prStateFilters, onTogglePRState,
   labelFilterCount, onLabelFilterPress,
+  hiddenRepos, onRestoreRepo,
 }: FilterBarProps) {
   return (
     <View style={styles.container}>
@@ -138,6 +142,17 @@ export function FilterBar({
             Labels{labelFilterCount > 0 ? ` (${labelFilterCount})` : ''}
           </Text>
         </TouchableOpacity>
+        {hiddenRepos.length > 0 && hiddenRepos.map((repo) => (
+          <TouchableOpacity
+            key={`${repo.owner}/${repo.name}`}
+            style={styles.hiddenChip}
+            onPress={() => onRestoreRepo(repo.owner, repo.name)}
+          >
+            <Text style={styles.hiddenChipText}>
+              +{repo.owner}/{repo.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
       {/* Sort chips */}
@@ -240,6 +255,21 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: '#58a6ff',
+  },
+  // Hidden repo chips
+  hiddenChip: {
+    backgroundColor: '#d2992220',
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#d29922',
+  },
+  hiddenChipText: {
+    fontSize: 12,
+    color: '#d29922',
+    fontWeight: '500',
   },
   // Sort chips
   sortLabel: {

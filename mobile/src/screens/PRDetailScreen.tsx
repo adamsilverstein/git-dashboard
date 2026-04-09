@@ -9,9 +9,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { PRDetail, CheckRun, Reviewer, TimelineEvent } from '../../shared/types.js';
-import { getPRDetails } from '../../shared/github/details.js';
-import { timeAgo } from '../../shared/utils/timeAgo.js';
+import type { PRDetail, CheckRun, Reviewer, TimelineEvent } from '../../../shared/types.js';
+import { getPRDetails } from '../../../shared/github/details.js';
+import { timeAgo } from '../../../shared/utils/timeAgo.js';
 import { useApp } from '../context/AppContext';
 import type { DashboardStackParamList } from '../navigation/types';
 

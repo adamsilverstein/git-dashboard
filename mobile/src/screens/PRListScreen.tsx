@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, FlatList, Text, TextInput, StyleSheet, RefreshControl, Linking } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DashboardItem, OwnershipFilter } from '../../../shared/types.js';
@@ -9,6 +9,7 @@ import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh.js';
 import { asyncStorageAdapter } from '../storage/asyncStorageAdapter';
 import { useApp } from '../context/AppContext';
 import { useConfigContext } from '../context/ConfigContext';
+import { useBadge } from '../context/BadgeContext';
 import { PRListItem } from '../components/PRListItem';
 import { FilterBar } from '../components/FilterBar';
 import { LabelFilterModal } from '../components/LabelFilterModal';
@@ -18,7 +19,8 @@ type Props = NativeStackScreenProps<DashboardStackParamList, 'PRList'>;
 
 export function PRListScreen({ navigation }: Props) {
   const { octokit, username, rateLimit } = useApp();
-  const { config, enabledRepos } = useConfigContext();
+  const { config, enabledRepos, toggleRepoByName } = useConfigContext();
+  const { setUnseenCount } = useBadge();
   const { markSeen, isUnseen } = useLastSeen(asyncStorageAdapter);
   const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('created');
   const [labelModalVisible, setLabelModalVisible] = useState(false);
@@ -53,6 +55,13 @@ export function PRListScreen({ navigation }: Props) {
     paused: false,
     onRefresh: refresh,
   });
+
+  // Update tab bar badge with unseen count
+  const unseenCount = useMemo(() => items.filter((item) => isUnseen(item)).length, [items, isUnseen]);
+  useEffect(() => { setUnseenCount(unseenCount); }, [unseenCount, setUnseenCount]);
+
+  // Hidden repos for quick-restore
+  const hiddenRepos = useMemo(() => config.repos.filter((r) => !r.enabled), [config.repos]);
 
   const handleRefresh = useCallback(() => {
     refresh();
@@ -134,6 +143,8 @@ export function PRListScreen({ navigation }: Props) {
         onTogglePRState={togglePRStateFilter}
         labelFilterCount={labelFilters.size}
         onLabelFilterPress={() => setLabelModalVisible(true)}
+        hiddenRepos={hiddenRepos}
+        onRestoreRepo={toggleRepoByName}
       />
 
       <Text style={styles.headerInfo}>{headerInfo}</Text>

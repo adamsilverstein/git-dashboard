@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { StorageAdapter } from '../../shared/storage.js';
+import type { StorageAdapter } from '../../../shared/storage.js';
 
 export const asyncStorageAdapter: StorageAdapter = {
   getItem: (key) => AsyncStorage.getItem(key),

@@ -1,4 +1,4 @@
-import type { PRItem } from '../../shared/types.js';
+import type { PRItem } from '../../../shared/types.js';
 
 export type DashboardStackParamList = {
   PRList: undefined;
