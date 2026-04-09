@@ -13,7 +13,7 @@ import { useConfigContext } from '../context/ConfigContext';
 
 export function SettingsScreen() {
   const { username, rateLimit, signOut } = useApp();
-  const { config, addRepo, removeRepo, toggleRepo } = useConfigContext();
+  const { config, addRepo, removeRepo, toggleRepo, updateDefaults } = useConfigContext();
   const [repoInput, setRepoInput] = useState('');
 
   const handleAddRepo = useCallback(() => {
@@ -102,6 +102,55 @@ export function SettingsScreen() {
         {config.repos.length === 0 && (
           <Text style={styles.emptyText}>No repositories added yet.</Text>
         )}
+      </View>
+
+      {/* Preferences */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Preferences</Text>
+
+        <View style={styles.prefRow}>
+          <Text style={styles.label}>Max PRs per repo</Text>
+          <TextInput
+            style={styles.prefInput}
+            value={String(config.defaults.maxPrsPerRepo)}
+            onChangeText={(v) => {
+              const n = parseInt(v, 10);
+              if (!isNaN(n) && n > 0) updateDefaults({ maxPrsPerRepo: n });
+            }}
+            keyboardType="number-pad"
+            placeholderTextColor="#484f58"
+          />
+        </View>
+
+        <View style={styles.prefRow}>
+          <Text style={styles.label}>Stale after (days)</Text>
+          <TextInput
+            style={styles.prefInput}
+            value={String(config.defaults.staleDays)}
+            onChangeText={(v) => {
+              const n = parseInt(v, 10);
+              if (!isNaN(n) && n >= 0) updateDefaults({ staleDays: n });
+            }}
+            keyboardType="number-pad"
+            placeholderTextColor="#484f58"
+          />
+        </View>
+
+        <View style={styles.prefRow}>
+          <Text style={styles.label}>Auto-refresh (sec)</Text>
+          <TextInput
+            style={styles.prefInput}
+            value={String(config.defaults.autoRefreshInterval)}
+            onChangeText={(v) => {
+              const n = parseInt(v, 10);
+              if (!isNaN(n) && n >= 0) updateDefaults({ autoRefreshInterval: n });
+            }}
+            keyboardType="number-pad"
+            placeholderTextColor="#484f58"
+          />
+        </View>
+
+        <Text style={styles.prefHint}>Set auto-refresh to 0 to disable.</Text>
       </View>
 
       {/* Sign out */}
@@ -205,6 +254,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#484f58',
     fontStyle: 'italic',
+  },
+  prefRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  prefInput: {
+    backgroundColor: '#0d1117',
+    borderWidth: 1,
+    borderColor: '#30363d',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 15,
+    color: '#e6edf3',
+    width: 80,
+    textAlign: 'center',
+  },
+  prefHint: {
+    fontSize: 12,
+    color: '#484f58',
+    marginTop: 4,
   },
   signOutButton: {
     backgroundColor: '#21262d',

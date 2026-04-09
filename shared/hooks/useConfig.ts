@@ -71,10 +71,17 @@ export function useConfig(storage: StorageAdapter) {
     });
   }, []);
 
+  const updateDefaults = useCallback((partial: Partial<Config['defaults']>) => {
+    setConfig((prev) => ({
+      ...prev,
+      defaults: { ...prev.defaults, ...partial },
+    }));
+  }, []);
+
   const enabledRepos = useMemo(
     () => config.repos.filter((r) => r.enabled),
     [config.repos]
   );
 
-  return { config, enabledRepos, addRepo, removeRepo, toggleRepo, toggleRepoByName };
+  return { config, enabledRepos, addRepo, removeRepo, toggleRepo, toggleRepoByName, updateDefaults };
 }
