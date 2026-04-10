@@ -50,15 +50,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Load token: prefer local dev config, then fall back to Keychain
   useEffect(() => {
     (async () => {
-      if (localToken) {
-        setTokenState(localToken);
-      } else {
-        const stored = await getToken(secureStorageAdapter);
-        setTokenState(stored);
+      try {
+        if (localToken) {
+          setTokenState(localToken);
+        } else {
+          const stored = await getToken(secureStorageAdapter);
+          setTokenState(stored);
+        }
+        // Initialize detail cache with AsyncStorage
+        await initDetailCache(asyncStorageAdapter);
+      } catch (e) {
+        console.warn('Failed to initialize app:', e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-      // Initialize detail cache with AsyncStorage
-      await initDetailCache(asyncStorageAdapter);
     })();
   }, []);
 

@@ -21,8 +21,8 @@ config.resolver.nodeModulesPaths = [
 // When TypeScript targets ESM, imports use .js extensions even for .ts source files.
 // Metro doesn't handle this, so we intercept resolution.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.endsWith('.js')) {
-    // Compute the full path to check if a .ts/.tsx equivalent exists
+  // Only rewrite relative imports (./foo.js, ../bar.js), not package imports
+  if (moduleName.endsWith('.js') && moduleName.startsWith('.')) {
     const callerDir = path.dirname(context.originModulePath);
     const basePath = path.resolve(callerDir, moduleName.replace(/\.js$/, ''));
 

@@ -31,11 +31,5 @@
     "plugins": [
       "expo-secure-store"
     ],
-    "updates": {
-      "url": "https://u.expo.dev/git-dashboard"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    }
   }
 }

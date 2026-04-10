@@ -3,12 +3,11 @@ name: Build iOS App
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*-ios'
     paths:
       - 'mobile/**'
       - 'shared/**'
-  push_tags:
-    tags:
-      - 'v*-ios'
 
 jobs:
   build:

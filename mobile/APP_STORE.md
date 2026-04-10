@@ -27,12 +27,7 @@ Update `mobile/app.json` with your App Store details:
     "ios": {
       "bundleIdentifier": "com.github.adamsilverstein.git-dashboard",
       "buildNumber": "1",
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
-      }
+      "supportsTablet": true
     }
   }
 }
