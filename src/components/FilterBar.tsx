@@ -28,7 +28,7 @@ const FILTER_OPTIONS: FilterDropdownOption<FilterMode>[] = [
 ];
 
 const PR_STATE_OPTIONS: FilterDropdownOption<PRStateFilterKey>[] = [
-  { key: 'draft', label: 'Draft', color: 'var(--text-muted)' },
+  { key: 'draft', label: 'Draft', color: 'var(--yellow)' },
   { key: 'open', label: 'Open', color: 'var(--green)' },
   { key: 'merged', label: 'Merged', color: 'var(--purple)' },
 ];

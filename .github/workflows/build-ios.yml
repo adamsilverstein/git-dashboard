@@ -1,0 +1,72 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*-ios'
+    paths:
+      - 'mobile/**'
+      - 'shared/**'
+
+jobs:
+  build:
+    name: EAS Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build preview (push to main)
+        if: github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
+        run: eas build --platform ios --profile preview --non-interactive
+
+      - name: Build and submit to App Store (version tag)
+        if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-ios')
+        run: eas build --platform ios --profile production --auto-submit --non-interactive
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+
+  test:
+    name: Verify Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
