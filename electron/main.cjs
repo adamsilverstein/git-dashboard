@@ -33,14 +33,28 @@ function createWindow() {
 
   // Serve dist/ files via the app:// protocol so the renderer has a real
   // origin and can make authenticated GitHub API requests without CORS issues.
-  const distDir = path.join(__dirname, '..', 'dist');
+  const distDir = path.resolve(__dirname, '..', 'dist');
   protocol.handle('app', (request) => {
     const url = new URL(request.url);
-    let filePath = path.join(distDir, decodeURIComponent(url.pathname));
-    // Default to index.html for the root path
-    if (url.pathname === '/' || url.pathname === '') {
-      filePath = path.join(distDir, 'index.html');
+    if (url.host !== 'dashboard') {
+      return new Response('Not found', { status: 404 });
     }
+
+    // Default to index.html for the root path; strip leading slashes so
+    // path.resolve treats the value as relative to distDir.
+    const relativePath =
+      url.pathname === '/' || url.pathname === ''
+        ? 'index.html'
+        : decodeURIComponent(url.pathname).replace(/^\/+/, '');
+
+    // Resolve the candidate path and ensure it stays inside distDir to
+    // prevent path traversal (e.g. app://dashboard/%2e%2e/%2e%2e/etc/passwd).
+    const filePath = path.resolve(distDir, relativePath);
+    const relativeToDist = path.relative(distDir, filePath);
+    if (relativeToDist.startsWith('..') || path.isAbsolute(relativeToDist)) {
+      return new Response('Not found', { status: 404 });
+    }
+
     return net.fetch(pathToFileURL(filePath).toString());
   });
 
