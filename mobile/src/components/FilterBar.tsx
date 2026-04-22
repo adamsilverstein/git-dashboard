@@ -59,6 +59,9 @@ interface FilterBarProps {
   // Labels
   labelFilterCount: number;
   onLabelFilterPress: () => void;
+  // Hide my replies
+  hideMyReplies?: boolean;
+  onToggleHideMyReplies?: () => void;
   // Hidden repos
   hiddenRepos: RepoConfig[];
   onRestoreRepo: (owner: string, name: string) => void;
@@ -71,6 +74,7 @@ export function FilterBar({
   itemTypeFilter, onItemTypeChange,
   prStateFilters, onTogglePRState,
   labelFilterCount, onLabelFilterPress,
+  hideMyReplies, onToggleHideMyReplies,
   hiddenRepos, onRestoreRepo,
 }: FilterBarProps) {
   return (
@@ -142,6 +146,16 @@ export function FilterBar({
             Labels{labelFilterCount > 0 ? ` (${labelFilterCount})` : ''}
           </Text>
         </TouchableOpacity>
+        {onToggleHideMyReplies && (
+          <TouchableOpacity
+            style={[styles.chip, hideMyReplies && styles.chipActive]}
+            onPress={onToggleHideMyReplies}
+          >
+            <Text style={[styles.chipText, hideMyReplies && styles.chipTextActive]}>
+              {hideMyReplies ? 'Hide my replies' : 'Show my replies'}
+            </Text>
+          </TouchableOpacity>
+        )}
         {hiddenRepos.length > 0 && hiddenRepos.map((repo) => (
           <TouchableOpacity
             key={`${repo.owner}/${repo.name}`}

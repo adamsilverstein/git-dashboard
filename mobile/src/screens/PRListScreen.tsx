@@ -41,6 +41,7 @@ export function PRListScreen({ navigation }: Props) {
     itemTypeFilter, setItemTypeFilter,
     prStateFilters, togglePRStateFilter,
     labelFilters, toggleLabelFilter, clearLabelFilters, availableLabels,
+    hideMyReplies, toggleHideMyReplies,
   } = useFilteredItems({
     items,
     defaultFilter: config.defaults.filter,
@@ -48,6 +49,7 @@ export function PRListScreen({ navigation }: Props) {
     isUnseen,
     staleDays: config.defaults.staleDays,
     storage: asyncStorageAdapter,
+    authUser: username,
   });
 
   const { secondsLeft, reset: resetAutoRefresh } = useAutoRefresh({
@@ -142,6 +144,8 @@ export function PRListScreen({ navigation }: Props) {
         onTogglePRState={togglePRStateFilter}
         labelFilterCount={labelFilters.size}
         onLabelFilterPress={() => setLabelModalVisible(true)}
+        hideMyReplies={hideMyReplies}
+        onToggleHideMyReplies={username ? toggleHideMyReplies : undefined}
         hiddenRepos={hiddenRepos}
         onRestoreRepo={toggleRepoByName}
       />

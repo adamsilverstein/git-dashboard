@@ -102,6 +102,7 @@ export function App() {
     itemTypeFilter, setItemTypeFilter, cursorIndex, setCursorIndex,
     prStateFilters, togglePRStateFilter,
     labelFilters, toggleLabelFilter, clearLabelFilters, availableLabels,
+    hideMyReplies, toggleHideMyReplies,
     moveCursor, cycleFilter, cycleSort,
     handleSetFilter, handleSetSort, cycleItemType,
   } = useFilteredItems({
@@ -110,6 +111,7 @@ export function App() {
     defaultSort: config.defaults.sort,
     isUnseen,
     staleDays: config.defaults.staleDays,
+    authUser: username,
   });
 
   const { secondsLeft: autoRefreshSecondsLeft, reset: resetAutoRefresh } = useAutoRefresh({
@@ -240,6 +242,8 @@ export function App() {
         onToggleLabel={toggleLabelFilter}
         onClearLabels={clearLabelFilters}
         availableLabels={availableLabels}
+        hideMyReplies={hideMyReplies}
+        onToggleHideMyReplies={username ? toggleHideMyReplies : undefined}
         milestoneGrouping={milestoneGrouping}
         onToggleMilestoneGrouping={toggleMilestoneGrouping}
       />

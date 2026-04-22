@@ -8,4 +8,5 @@ export const STORAGE_KEYS = {
   DETAIL_CACHE: 'gh-dashboard-detail-cache',
   COLUMN_SETTINGS: 'gh-dashboard-column-settings',
   LABEL_FILTERS: 'gh-dashboard-label-filters',
+  HIDE_MY_REPLIES: 'gh-dashboard-hide-my-replies',
 } as const;

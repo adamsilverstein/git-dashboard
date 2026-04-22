@@ -17,9 +17,14 @@ interface UseFilteredItemsOptions {
   isUnseen: (item: DashboardItem) => boolean;
   staleDays: number;
   storage: StorageAdapter;
+  /**
+   * Authenticated GitHub login. Enables the "hide my replies" filter —
+   * when null the filter is inert even if the toggle is on.
+   */
+  authUser?: string | null;
 }
 
-export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, staleDays, storage }: UseFilteredItemsOptions) {
+export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, staleDays, storage, authUser }: UseFilteredItemsOptions) {
   const [filter, setFilter] = useState<FilterMode>(defaultFilter);
   const [sort, setSort] = useState<SortMode>(defaultSort);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -28,6 +33,7 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
   const [cursorIndex, setCursorIndex] = useState(0);
   const [prStateFilters, setPRStateFilters] = useState<Set<PRStateFilterKey>>(new Set(['draft', 'open']));
   const [labelFilters, setLabelFilters] = useState<Set<string>>(new Set());
+  const [hideMyReplies, setHideMyReplies] = useState(false);
 
   // Load persisted filters from storage on mount
   useEffect(() => {
@@ -39,6 +45,9 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
           setLabelFilters(new Set(parsed.filter((s) => typeof s === 'string')));
         }
       } catch { /* ignore */ }
+    });
+    storage.getItem(STORAGE_KEYS.HIDE_MY_REPLIES).then((stored) => {
+      if (stored === 'true') setHideMyReplies(true);
     });
     storage.getItem(STORAGE_KEYS.PR_STATE_FILTERS).then((stored) => {
       if (!stored) return;
@@ -63,6 +72,16 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
   useEffect(() => {
     storage.setItem(STORAGE_KEYS.LABEL_FILTERS, JSON.stringify([...labelFilters])).catch(() => {});
   }, [labelFilters, storage]);
+
+  // Persist hide-my-replies toggle
+  useEffect(() => {
+    storage.setItem(STORAGE_KEYS.HIDE_MY_REPLIES, hideMyReplies ? 'true' : 'false').catch(() => {});
+  }, [hideMyReplies, storage]);
+
+  const toggleHideMyReplies = useCallback(() => {
+    setHideMyReplies((prev) => !prev);
+    setCursorIndex(0);
+  }, []);
 
   const toggleLabelFilter = useCallback((label: string) => {
     setLabelFilters((prev) => {
@@ -112,6 +131,14 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
       result = result.filter((item) =>
         item.labels.some((l) => labelFilters.has(l.name))
       );
+    }
+
+    // Hide items where I was the last commenter — useful for finding threads
+    // waiting on someone else's reply. Rows with no lastCommenter (zero
+    // comments, or enrichment not yet resolved) are kept so we don't hide
+    // genuinely unanswered items.
+    if (hideMyReplies && authUser) {
+      result = result.filter((item) => item.lastCommenter !== authUser);
     }
 
     if (filter === 'failing') {
@@ -208,7 +235,7 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
     });
 
     return result;
-  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, prStateFilters, labelFilters, isUnseen, staleDays]);
+  }, [items, filter, sort, sortDirection, searchQuery, itemTypeFilter, prStateFilters, labelFilters, hideMyReplies, authUser, isUnseen, staleDays]);
 
   // Clamp cursor when filtered list shrinks
   useEffect(() => {
@@ -296,6 +323,8 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
     toggleLabelFilter,
     clearLabelFilters,
     availableLabels,
+    hideMyReplies,
+    toggleHideMyReplies,
     moveCursor,
     cycleFilter,
     cycleSort,
