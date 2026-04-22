@@ -34,6 +34,7 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
   const [prStateFilters, setPRStateFilters] = useState<Set<PRStateFilterKey>>(new Set(['draft', 'open']));
   const [labelFilters, setLabelFilters] = useState<Set<string>>(new Set());
   const [hideMyReplies, setHideMyReplies] = useState(false);
+  const [hideMyRepliesLoaded, setHideMyRepliesLoaded] = useState(false);
 
   // Load persisted filters from storage on mount
   useEffect(() => {
@@ -46,9 +47,13 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
         }
       } catch { /* ignore */ }
     });
-    storage.getItem(STORAGE_KEYS.HIDE_MY_REPLIES).then((stored) => {
-      if (stored === 'true') setHideMyReplies(true);
-    });
+    storage
+      .getItem(STORAGE_KEYS.HIDE_MY_REPLIES)
+      .then((stored) => {
+        if (stored === 'true') setHideMyReplies(true);
+      })
+      .catch(() => { /* ignore */ })
+      .finally(() => setHideMyRepliesLoaded(true));
     storage.getItem(STORAGE_KEYS.PR_STATE_FILTERS).then((stored) => {
       if (!stored) return;
       try {
@@ -73,10 +78,13 @@ export function useFilteredItems({ items, defaultFilter, defaultSort, isUnseen, 
     storage.setItem(STORAGE_KEYS.LABEL_FILTERS, JSON.stringify([...labelFilters])).catch(() => {});
   }, [labelFilters, storage]);
 
-  // Persist hide-my-replies toggle
+  // Persist hide-my-replies toggle, but only after the initial async load
+  // completes — otherwise the default `false` would clobber a persisted `true`
+  // on async storage adapters (AsyncStorage on mobile) before the loader reads.
   useEffect(() => {
+    if (!hideMyRepliesLoaded) return;
     storage.setItem(STORAGE_KEYS.HIDE_MY_REPLIES, hideMyReplies ? 'true' : 'false').catch(() => {});
-  }, [hideMyReplies, storage]);
+  }, [hideMyReplies, hideMyRepliesLoaded, storage]);
 
   const toggleHideMyReplies = useCallback(() => {
     setHideMyReplies((prev) => !prev);
