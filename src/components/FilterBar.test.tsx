@@ -113,3 +113,28 @@ describe('FilterBar search', () => {
     expect(screen.getByPlaceholderText('Search… ( / )')).toBeInTheDocument();
   });
 });
+
+describe('FilterBar hide my replies toggle', () => {
+  it('hides the toggle when no handler is provided (no auth user)', () => {
+    renderFilterBar();
+    expect(screen.queryByText('My replies')).not.toBeInTheDocument();
+  });
+
+  it('renders the toggle with Shown label when inactive', () => {
+    renderFilterBar({ onToggleHideMyReplies: vi.fn(), hideMyReplies: false });
+    expect(screen.getByText('My replies')).toBeInTheDocument();
+    expect(screen.getByText('Shown')).toBeInTheDocument();
+  });
+
+  it('renders the toggle with Hidden label when active', () => {
+    renderFilterBar({ onToggleHideMyReplies: vi.fn(), hideMyReplies: true });
+    expect(screen.getByText('Hidden')).toBeInTheDocument();
+  });
+
+  it('calls onToggleHideMyReplies when clicked', async () => {
+    const onToggleHideMyReplies = vi.fn();
+    renderFilterBar({ onToggleHideMyReplies });
+    await userEvent.click(screen.getByText('My replies'));
+    expect(onToggleHideMyReplies).toHaveBeenCalledTimes(1);
+  });
+});

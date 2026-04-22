@@ -10,6 +10,7 @@ interface UseFilteredItemsOptions {
   defaultSort: SortMode;
   isUnseen: (item: DashboardItem) => boolean;
   staleDays: number;
+  authUser?: string | null;
 }
 
 export function useFilteredItems(options: UseFilteredItemsOptions) {

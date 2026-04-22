@@ -52,11 +52,14 @@ interface FilterBarProps {
   onToggleLabel: (label: string) => void;
   onClearLabels: () => void;
   availableLabels: LabelInfo[];
+  hideMyReplies?: boolean;
+  /** When provided, renders the "Hide my replies" toggle. Omit to hide the control (e.g. before auth user is known). */
+  onToggleHideMyReplies?: () => void;
   milestoneGrouping?: boolean;
   onToggleMilestoneGrouping?: () => void;
 }
 
-export function FilterBar({ active, onFilter, ownershipFilter, onSetOwnership, username, searchQuery, onSearchChange, searchInputRef, itemTypeFilter, onSetItemType, hiddenRepos, onRestoreRepo, prStateFilters, onTogglePRState, labelFilters, onToggleLabel, onClearLabels, availableLabels, milestoneGrouping, onToggleMilestoneGrouping }: FilterBarProps) {
+export function FilterBar({ active, onFilter, ownershipFilter, onSetOwnership, username, searchQuery, onSearchChange, searchInputRef, itemTypeFilter, onSetItemType, hiddenRepos, onRestoreRepo, prStateFilters, onTogglePRState, labelFilters, onToggleLabel, onClearLabels, availableLabels, hideMyReplies, onToggleHideMyReplies, milestoneGrouping, onToggleMilestoneGrouping }: FilterBarProps) {
   const [showHiddenDropdown, setShowHiddenDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const hiddenCount = hiddenRepos?.length ?? 0;
@@ -170,6 +173,16 @@ export function FilterBar({ active, onFilter, ownershipFilter, onSetOwnership, u
             </div>
           )}
         </div>
+      )}
+      {onToggleHideMyReplies && (
+        <button
+          className={`filter-dropdown-trigger ${hideMyReplies ? 'filter-active' : ''}`}
+          onClick={onToggleHideMyReplies}
+          title="Hide items where I was the last commenter"
+        >
+          <span className="filter-dropdown-category">My replies</span>
+          <span className="filter-dropdown-value">{hideMyReplies ? 'Hidden' : 'Shown'}</span>
+        </button>
       )}
       {onToggleMilestoneGrouping && (
         <button
