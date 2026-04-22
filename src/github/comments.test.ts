@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   getLastCommenter,
+  parseLastPage,
   LAST_COMMENTER_PAGE_SIZE,
 } from '../../shared/github/comments.js';
 import type { Octokit } from '@octokit/rest';
@@ -13,12 +14,15 @@ function comment(login: string) {
   return { user: { login } };
 }
 
+// The GitHub per-issue comments endpoint returns comments in ascending
+// chronological order (oldest first). Fixtures use that same order so
+// they mirror real API responses.
 describe('getLastCommenter', () => {
-  it('returns the most recent non-excluded commenter', async () => {
+  it('returns the most recent non-excluded commenter (last element)', async () => {
     const octokit = mockOctokit({
       issues: {
         listComments: vi.fn().mockResolvedValue({
-          data: [comment('alice'), comment('bob')],
+          data: [comment('bob'), comment('alice')],
         }),
       },
     });
@@ -26,14 +30,14 @@ describe('getLastCommenter', () => {
     expect(await getLastCommenter(octokit, 'acme', 'web', 1)).toBe('alice');
   });
 
-  it('skips github-actions[bot] and returns the next commenter', async () => {
+  it('skips trailing github-actions[bot] comments and returns the next-newest commenter', async () => {
     const octokit = mockOctokit({
       issues: {
         listComments: vi.fn().mockResolvedValue({
           data: [
-            comment('github-actions[bot]'),
-            comment('github-actions[bot]'),
             comment('alice'),
+            comment('github-actions[bot]'),
+            comment('github-actions[bot]'),
           ],
         }),
       },
@@ -46,7 +50,7 @@ describe('getLastCommenter', () => {
     const octokit = mockOctokit({
       issues: {
         listComments: vi.fn().mockResolvedValue({
-          data: [comment('coderabbitai[bot]'), comment('alice')],
+          data: [comment('alice'), comment('coderabbitai[bot]')],
         }),
       },
     });
@@ -82,7 +86,7 @@ describe('getLastCommenter', () => {
     const octokit = mockOctokit({
       issues: {
         listComments: vi.fn().mockResolvedValue({
-          data: [{ user: null }, comment('alice')],
+          data: [comment('alice'), { user: null }],
         }),
       },
     });
@@ -90,20 +94,75 @@ describe('getLastCommenter', () => {
     expect(await getLastCommenter(octokit, 'acme', 'web', 1)).toBe('alice');
   });
 
-  it('requests enough comments in descending order to skip noisy bots', async () => {
+  it('requests LAST_COMMENTER_PAGE_SIZE comments without relying on sort/direction', async () => {
     const listComments = vi.fn().mockResolvedValue({ data: [] });
     const octokit = mockOctokit({ issues: { listComments } });
 
     await getLastCommenter(octokit, 'acme', 'web', 42);
 
-    expect(listComments).toHaveBeenCalledWith(
-      expect.objectContaining({
-        owner: 'acme',
-        repo: 'web',
-        issue_number: 42,
-        direction: 'desc',
-        per_page: LAST_COMMENTER_PAGE_SIZE,
+    expect(listComments).toHaveBeenCalledWith({
+      owner: 'acme',
+      repo: 'web',
+      issue_number: 42,
+      per_page: LAST_COMMENTER_PAGE_SIZE,
+    });
+  });
+
+  it('follows the Link header to the last page when more than one page exists', async () => {
+    const listComments = vi
+      .fn()
+      // First call: page 1 of 3, with a rel="last" link pointing to page 3.
+      .mockResolvedValueOnce({
+        data: [comment('old-one'), comment('old-two')],
+        headers: {
+          link:
+            '<https://api.github.com/repositories/1/issues/1/comments?per_page=100&page=3>; rel="last"',
+        },
       })
-    );
+      // Second call: the last page, whose final comment is the newest.
+      .mockResolvedValueOnce({
+        data: [comment('middle'), comment('newest')],
+      });
+
+    const octokit = mockOctokit({ issues: { listComments } });
+
+    expect(await getLastCommenter(octokit, 'acme', 'web', 1)).toBe('newest');
+    expect(listComments).toHaveBeenNthCalledWith(2, {
+      owner: 'acme',
+      repo: 'web',
+      issue_number: 1,
+      per_page: LAST_COMMENTER_PAGE_SIZE,
+      page: 3,
+    });
+  });
+
+  it('does not fetch a second page when the first page is the last page', async () => {
+    const listComments = vi.fn().mockResolvedValue({
+      data: [comment('alice')],
+      headers: { link: undefined },
+    });
+    const octokit = mockOctokit({ issues: { listComments } });
+
+    expect(await getLastCommenter(octokit, 'acme', 'web', 1)).toBe('alice');
+    expect(listComments).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('parseLastPage', () => {
+  it('returns null when the header is missing', () => {
+    expect(parseLastPage(undefined)).toBeNull();
+  });
+
+  it('returns null when the header has no rel="last" entry', () => {
+    const link =
+      '<https://api.github.com/repositories/1/issues/1/comments?per_page=100&page=2>; rel="next"';
+    expect(parseLastPage(link)).toBeNull();
+  });
+
+  it('extracts the last-page number from a full Link header', () => {
+    const link =
+      '<https://api.github.com/repositories/1/issues/1/comments?per_page=100&page=2>; rel="next", ' +
+      '<https://api.github.com/repositories/1/issues/1/comments?per_page=100&page=9>; rel="last"';
+    expect(parseLastPage(link)).toBe(9);
   });
 });
