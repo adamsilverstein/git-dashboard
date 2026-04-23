@@ -3,7 +3,12 @@ import type { DeviceFlowTransport } from './transport.js';
 export const GITHUB_DEVICE_CODE_URL = 'https://github.com/login/device/code';
 export const GITHUB_ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
-/** Default scope for the dashboard — read access to PRs and check status. */
+/**
+ * Default scope. The `repo` scope is required to read PRs, commits, and check
+ * status from private repositories — there is no narrower OAuth scope that
+ * grants private-repo PR read access. Note that `repo` also confers write
+ * access; the dashboard never uses it, but token holders should be aware.
+ */
 export const DEFAULT_OAUTH_SCOPE = 'repo';
 
 export interface DeviceCodeResponse {
@@ -131,10 +136,6 @@ export async function pollAccessToken(
 
 function defaultSleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(new DeviceFlowAbortedError());
-      return;
-    }
     const timer = setTimeout(() => {
       cleanup();
       resolve();
@@ -143,10 +144,16 @@ function defaultSleep(ms: number, signal?: AbortSignal): Promise<void> {
       cleanup();
       reject(new DeviceFlowAbortedError());
     };
-    signal?.addEventListener('abort', onAbort);
     function cleanup() {
       clearTimeout(timer);
       signal?.removeEventListener('abort', onAbort);
+    }
+    signal?.addEventListener('abort', onAbort);
+    // Check after registering so a signal that was already aborted is caught
+    // (the abort event would have fired before we listened for it).
+    if (signal?.aborted) {
+      cleanup();
+      reject(new DeviceFlowAbortedError());
     }
   });
 }

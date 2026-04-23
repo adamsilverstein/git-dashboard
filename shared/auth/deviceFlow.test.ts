@@ -165,6 +165,20 @@ describe('pollAccessToken', () => {
     ).rejects.toBeInstanceOf(DeviceFlowAbortedError);
   });
 
+  it('rejects with DeviceFlowAbortedError when an already-aborted signal is passed to the real sleep', async () => {
+    const transport = makeTransport([]);
+    const controller = new AbortController();
+    controller.abort();
+    // Use the real defaultSleep (no `sleep` override) to exercise the
+    // listener-then-check ordering inside it.
+    await expect(
+      pollAccessToken(transport, 'cid', 'dc', {
+        intervalSeconds: 0,
+        signal: controller.signal,
+      })
+    ).rejects.toBeInstanceOf(DeviceFlowAbortedError);
+  });
+
   it('throws when GitHub returns an unknown error code', async () => {
     const transport = makeTransport([
       { error: 'invalid_grant', error_description: 'bad device code' },
