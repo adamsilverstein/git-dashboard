@@ -28,15 +28,32 @@ export function TokenSetupScreen() {
   const [saving, setSaving] = useState(false);
   const [patError, setPatError] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
+  const [oauthSaveError, setOAuthSaveError] = useState<string | null>(null);
 
-  // Persist OAuth token as soon as polling succeeds.
+  // Persist OAuth token as soon as polling succeeds. SecureStore writes can
+  // fail (Keychain permission issues, etc.); surface the error so the user
+  // can retry instead of being stranded on a "success" screen.
   useEffect(() => {
-    if (oauthState.status === 'success' && oauthState.token) {
-      saveToken(oauthState.token).catch(() => {
-        // Saving failure surfaces in the device-flow error path next time.
-      });
-    }
+    if (oauthState.status !== 'success' || !oauthState.token) return;
+    setOAuthSaveError(null);
+    saveToken(oauthState.token).catch((err) => {
+      console.warn('Failed to save OAuth token:', err);
+      setOAuthSaveError(
+        err instanceof Error ? err.message : 'Could not save the token to secure storage.'
+      );
+    });
   }, [oauthState.status, oauthState.token, saveToken]);
+
+  const retryOAuthSave = () => {
+    if (!oauthState.token) return;
+    setOAuthSaveError(null);
+    saveToken(oauthState.token).catch((err) => {
+      console.warn('Failed to save OAuth token:', err);
+      setOAuthSaveError(
+        err instanceof Error ? err.message : 'Could not save the token to secure storage.'
+      );
+    });
+  };
 
   const handleSavePat = async () => {
     const trimmed = input.trim();
@@ -70,10 +87,13 @@ export function TokenSetupScreen() {
         {mode === 'oauth' && oauthAvailability.available ? (
           <OAuthCard
             state={oauthState}
+            saveError={oauthSaveError}
+            onRetrySave={retryOAuthSave}
             onStart={startOAuth}
             onCancel={cancelOAuth}
             onUsePat={() => {
               cancelOAuth();
+              setOAuthSaveError(null);
               setMode('pat');
             }}
           />
@@ -100,15 +120,38 @@ export function TokenSetupScreen() {
 
 function OAuthCard({
   state,
+  saveError,
+  onRetrySave,
   onStart,
   onCancel,
   onUsePat,
 }: {
   state: ReturnType<typeof useDeviceFlow>['state'];
+  saveError: string | null;
+  onRetrySave: () => void;
   onStart: () => void;
   onCancel: () => void;
   onUsePat: () => void;
 }) {
+  if (state.status === 'success' && saveError) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.label}>Sign-in succeeded, but saving failed</Text>
+        <Text style={styles.error}>{saveError}</Text>
+        <Text style={styles.helper}>
+          Your GitHub authorization was approved, but the token couldn't be written to secure
+          storage on this device. Try again, or fall back to a Personal Access Token.
+        </Text>
+        <TouchableOpacity style={styles.button} onPress={onRetrySave}>
+          <Text style={styles.buttonText}>Retry save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.linkButton} onPress={onUsePat}>
+          <Text style={styles.linkText}>Use a Personal Access Token instead</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (state.status === 'awaiting' && state.device) {
     return (
       <View style={styles.card}>
