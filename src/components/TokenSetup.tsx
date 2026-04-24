@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { copyTextToClipboard } from '../auth/electronBridge.js';
 import { getOAuthAvailability } from '../auth/oauthConfig.js';
 import { useDeviceFlow } from '../auth/useDeviceFlow.js';
 
@@ -42,12 +43,10 @@ export function TokenSetup({ onSave, reason }: TokenSetupProps) {
 
   const copyCode = async () => {
     if (!state.device?.user_code) return;
-    try {
-      await navigator.clipboard.writeText(state.device.user_code);
+    const ok = await copyTextToClipboard(state.device.user_code);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard may be unavailable; ignore — the code is visible on screen.
     }
   };
 

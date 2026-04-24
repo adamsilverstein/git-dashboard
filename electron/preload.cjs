@@ -5,7 +5,7 @@
  * main process validates every URL before making a request. The renderer
  * cannot drive arbitrary network calls through this bridge.
  */
-const { contextBridge, ipcRenderer } = require('electron');
+const { clipboard, contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   oauthDeviceFlow: {
@@ -15,6 +15,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
      */
     postForm(url, body) {
       return ipcRenderer.invoke('oauth:postForm', url, body);
+    },
+  },
+  clipboard: {
+    writeText(text) {
+      clipboard.writeText(String(text));
     },
   },
 });
