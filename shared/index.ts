@@ -45,6 +45,13 @@ export {
 export type { DeviceCodeResponse, PollOptions } from './auth/deviceFlow.js';
 export type { AuthMethod } from './auth/method.js';
 export { getAuthMethod, authMethodLabel } from './auth/method.js';
+export { useDeviceFlow } from './auth/useDeviceFlow.js';
+export type {
+  DeviceFlowAvailability,
+  DeviceFlowState,
+  DeviceFlowStatus,
+  UseDeviceFlowOptions,
+} from './auth/useDeviceFlow.js';
 
 // Hooks
 export { useGithubData } from './hooks/useGithubData.js';
