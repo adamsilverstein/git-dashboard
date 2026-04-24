@@ -19,7 +19,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   clipboard: {
     writeText(text) {
-      clipboard.writeText(String(text));
+      if (typeof text !== 'string') {
+        throw new TypeError('clipboard.writeText expects a string');
+      }
+      clipboard.writeText(text);
     },
   },
 });
