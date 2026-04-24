@@ -27,20 +27,29 @@ function registerOAuthBridge() {
       params.append(key, value);
     }
 
-    const response = await net.fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-      },
-      body: params.toString(),
-    });
-
-    const text = await response.text();
+    // Bound the request so a hung network doesn't leave the Device Flow UI
+    // wedged in a pending state. Electron's `net.fetch` honors AbortSignal.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error(`OAuth endpoint returned non-JSON response (status ${response.status})`);
+      const response = await net.fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+        },
+        body: params.toString(),
+        signal: controller.signal,
+      });
+
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error(`OAuth endpoint returned non-JSON response (status ${response.status})`);
+      }
+    } finally {
+      clearTimeout(timeout);
     }
   });
 }
