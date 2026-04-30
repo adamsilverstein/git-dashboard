@@ -1,6 +1,6 @@
 # Claude Code Instructions — LandinGit
 
-> Repository slug is still `git-dashboard` in some local clones; the canonical slug is now `landingit`. iOS bundle identifier and Electron `appId` have been updated to `com.github.adamsilverstein.landingit` (see #120).
+> Repository slug is still `git-dashboard` in some local clones; the canonical slug is now `landingit`. iOS bundle identifier and Electron `appId` remain `com.github.adamsilverstein.git-dashboard` to match the App Store Connect registration (Apple ID 6765520480) — only the display name was renamed to LandinGit.
 
 ## Project Overview
 

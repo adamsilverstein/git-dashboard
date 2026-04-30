@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.github.adamsilverstein.landingit",
+      "bundleIdentifier": "com.github.adamsilverstein.git-dashboard",
       "buildNumber": "1"
     },
     "android": {
