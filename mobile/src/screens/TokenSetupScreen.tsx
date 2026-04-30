@@ -81,7 +81,7 @@ export function TokenSetupScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Git Dashboard</Text>
+        <Text style={styles.title}>LandinGit</Text>
         <Text style={styles.subtitle}>GitHub PR Dashboard for iOS</Text>
 
         {mode === 'oauth' && oauthAvailability.available ? (
@@ -263,7 +263,7 @@ function PatCard({
 
       <TouchableOpacity
         style={styles.linkButton}
-        onPress={() => Linking.openURL('https://github.com/settings/tokens/new?scopes=repo&description=Git+Dashboard+iOS')}
+        onPress={() => Linking.openURL('https://github.com/settings/tokens/new?scopes=repo&description=LandinGit+iOS')}
       >
         <Text style={styles.linkText}>Create a new token on GitHub</Text>
       </TouchableOpacity>

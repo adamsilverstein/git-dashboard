@@ -53,7 +53,7 @@ export function TokenSetup({ onSave, reason }: TokenSetupProps) {
   return (
     <div className="token-setup">
       <div className="token-card">
-        <h1>Git Dashboard</h1>
+        <h1>LandinGit</h1>
         {reason === 'expired' && (
           <p className="token-warning">Your GitHub credentials are invalid or expired. Please reconnect.</p>
         )}
@@ -99,7 +99,7 @@ function OAuthPanel({
   if (state.status === 'awaiting' && state.device) {
     return (
       <>
-        <p>Authorize Git Dashboard on GitHub to finish signing in.</p>
+        <p>Authorize LandinGit on GitHub to finish signing in.</p>
         <ol className="token-steps">
           <li>
             Open{' '}
